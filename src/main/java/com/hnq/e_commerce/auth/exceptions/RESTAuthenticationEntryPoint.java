@@ -9,8 +9,15 @@ import java.io.IOException;
 
 public class RESTAuthenticationEntryPoint implements org.springframework.security.web.AuthenticationEntryPoint {
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+    public void commence(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException
+                        ) throws IOException, ServletException {
 
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "401 Unauthorized");
+        response.sendError(
+                HttpServletResponse.SC_UNAUTHORIZED,
+                "401 Unauthorized"
+                          );
     }
 }

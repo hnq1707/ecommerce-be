@@ -23,10 +23,10 @@ public class UserDetailController {
     private UserDetailsService userDetailsService;
 
     @GetMapping("/profile")
-    public ResponseEntity<UserDetailsDto> getUserProfile(Principal principal){
+    public ResponseEntity<UserDetailsDto> getUserProfile(Principal principal) {
         User user = (User) userDetailsService.loadUserByUsername(principal.getName());
 
-        if(null == user){
+        if (null == user) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 

@@ -24,7 +24,7 @@ public class JWTTokenHelper {
     @Value("${jwt.auth.expires_in}")
     private int expiresIn;
 
-    public String generateToken(String userName){
+    public String generateToken(String userName) {
         return Jwts.builder()
                 .issuer(appName)
                 .subject(userName)
@@ -43,10 +43,10 @@ public class JWTTokenHelper {
         return new Date(new Date().getTime() + expiresIn * 1000L);
     }
 
-    public String getToken( HttpServletRequest request ) {
+    public String getToken(HttpServletRequest request) {
 
-        String authHeader = getAuthHeaderFromHeader( request );
-        if ( authHeader != null && authHeader.startsWith("Bearer ")) {
+        String authHeader = getAuthHeaderFromHeader(request);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
@@ -63,7 +63,7 @@ public class JWTTokenHelper {
     }
 
     private boolean isTokenExpired(String token) {
-        Date expireDate=getExpirationDate(token);
+        Date expireDate = getExpirationDate(token);
         return expireDate.before(new Date());
     }
 
@@ -94,17 +94,16 @@ public class JWTTokenHelper {
         return username;
     }
 
-    private Claims getAllClaimsFromToken(String token){
+    private Claims getAllClaimsFromToken(String token) {
         Claims claims;
-        try{
-            claims= Jwts.parser()
+        try {
+            claims = Jwts.parser()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        }
-        catch (Exception e){
-            claims =null;
+        } catch (Exception e) {
+            claims = null;
         }
         return claims;
     }

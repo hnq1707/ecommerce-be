@@ -31,7 +31,7 @@ public class ProductVariant {
     private Integer stockQuantity;
 
     @ManyToOne
-    @JoinColumn(name = "product_id",nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     @JsonIgnore
     private Product product;
 }

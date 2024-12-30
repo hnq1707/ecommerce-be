@@ -31,7 +31,7 @@ public class CategoryType {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "category_id",nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnore
     private Category category;
 }

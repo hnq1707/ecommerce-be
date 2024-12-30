@@ -29,14 +29,14 @@ public class RegistrationService {
 
         User existing = userDetailRepository.findByEmail(request.getEmail());
 
-        if(null != existing){
-            return  RegistrationResponse.builder()
+        if (null != existing) {
+            return RegistrationResponse.builder()
                     .code(400)
                     .message("Email already exist!")
                     .build();
         }
 
-        try{
+        try {
 
             User user = new User();
             user.setFirstName(request.getFirstName());
@@ -62,12 +62,12 @@ public class RegistrationService {
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new ServerErrorException(e.getMessage(),e.getCause());
+            throw new ServerErrorException(e.getMessage(), e.getCause());
         }
     }
 
     public void verifyUser(String userName) {
-        User user= userDetailRepository.findByEmail(userName);
+        User user = userDetailRepository.findByEmail(userName);
         user.setEnabled(true);
         userDetailRepository.save(user);
     }

@@ -23,7 +23,7 @@ public class OAuth2Service {
         String firstName = oAuth2User.getAttribute("given_name");
         String lastName = oAuth2User.getAttribute("family_name");
         String email = oAuth2User.getAttribute("email");
-        User user= User.builder()
+        User user = User.builder()
                 .firstName(firstName)
                 .lastName(lastName)
                 .email(email)

@@ -16,16 +16,18 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String sender;
 
-    public String sendMail(User user){
+    public String sendMail(User user) {
         String subject = "Verify your email";
         String senderName = "HNQ Shop";
         String mailContent = "Hello " + user.getUsername() + ",\n";
-        mailContent += "Your verification code is: " + user.getVerificationCode() + "\n";
+        mailContent +=
+                "Your verification code is: " + user.getVerificationCode() +
+                        "\n";
         mailContent += "Please enter this code to verify your email.";
-        mailContent +="\n";
-        mailContent+= senderName;
+        mailContent += "\n";
+        mailContent += senderName;
 
-        try{
+        try {
             SimpleMailMessage mailMessage
                     = new SimpleMailMessage();
             mailMessage.setFrom(sender);
@@ -33,8 +35,7 @@ public class EmailService {
             mailMessage.setText(mailContent);
             mailMessage.setSubject(subject);
             javaMailSender.send(mailMessage);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return "Error while Sending Mail";
         }
         return "Email sent";

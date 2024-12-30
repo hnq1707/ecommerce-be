@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name= "product")
+@Table(name = "product")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,7 +41,7 @@ public class Product {
     @Column(nullable = false)
     private boolean isNewArrival;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String slug;
 
     @Column(nullable = false, updatable = false)
@@ -52,16 +52,16 @@ public class Product {
     @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date updatedAt;
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductVariant> productVariants;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id",nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnore
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryType_id",nullable = false)
+    @JoinColumn(name = "categoryType_id", nullable = false)
     @JsonIgnore
     private CategoryType categoryType;
 

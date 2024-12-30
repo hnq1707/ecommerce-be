@@ -11,11 +11,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductResourceDto {
+public class OrderItemRequest {
 
-    private UUID id;
-    private String name;
-    private String url;
-    private String type;
-    private Boolean isPrimary;
+    private UUID productId;
+    private UUID productVariantId;
+    private Double discount;
+    private Integer quantity;
 }

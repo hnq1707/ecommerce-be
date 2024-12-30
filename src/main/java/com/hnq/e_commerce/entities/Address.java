@@ -1,7 +1,6 @@
 package com.hnq.e_commerce.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import com.hnq.e_commerce.auth.entities.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,7 +37,7 @@ public class Address {
     private String phoneNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     @ToString.Exclude
     private User user;

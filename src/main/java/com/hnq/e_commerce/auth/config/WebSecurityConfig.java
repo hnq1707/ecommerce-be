@@ -10,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -30,17 +31,29 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests((authorize) -> authorize
                         // Permit swagger UI and API docs
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                                        ).permitAll()
                         // Permit GET requests for products and categories
-                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/category").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products",
+                                "/api/category"
+                                        ).permitAll()
                         // Permit POST requests for authentication
-                        .requestMatchers(HttpMethod.POST, "/api/auth/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/*")
+                        .permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2Login -> oauth2Login
                         .defaultSuccessUrl("/oauth2/success")
                         .loginPage("/oauth2/authorization/google"))
-                .addFilterBefore(new JWTAuthenticationFilter(jwtTokenHelper, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JWTAuthenticationFilter(
+                        jwtTokenHelper,
+                        userDetailsService
+                ), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -56,6 +69,6 @@ public class WebSecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 }
