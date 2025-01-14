@@ -1,4 +1,4 @@
-package com.hnq.e_commerce.auth.dto;
+package com.hnq.e_commerce.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserToken {
+public class RegistrationResponse {
 
-    private String token;
+    private int code;
+    private String message;
+
 }

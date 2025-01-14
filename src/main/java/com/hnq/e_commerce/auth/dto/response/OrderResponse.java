@@ -1,4 +1,4 @@
-package com.hnq.e_commerce.auth.dto;
+package com.hnq.e_commerce.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

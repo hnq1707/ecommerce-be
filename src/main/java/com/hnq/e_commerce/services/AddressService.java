@@ -4,25 +4,32 @@ import com.hnq.e_commerce.auth.entities.User;
 import com.hnq.e_commerce.dto.AddressRequest;
 import com.hnq.e_commerce.entities.Address;
 import com.hnq.e_commerce.repositories.AddressRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Service
 public class AddressService {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
 
-    @Autowired
-    private AddressRepository addressRepository;
 
-    public Address createAddress(AddressRequest addressRequest, Principal principal){
-        User user= (User) userDetailsService.loadUserByUsername(principal.getName());
+    AddressRepository addressRepository;
+
+    public Address createAddress(AddressRequest addressRequest, Principal principal) {
+        // Lấy User từ SecurityContextHolder
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // Tạo Address từ AddressRequest
         Address address = Address.builder()
                 .name(addressRequest.getName())
                 .street(addressRequest.getStreet())
@@ -32,8 +39,11 @@ public class AddressService {
                 .phoneNumber(addressRequest.getPhoneNumber())
                 .user(user)
                 .build();
+
+        // Lưu vào database
         return addressRepository.save(address);
     }
+
 
     public void deleteAddress(UUID id) {
         addressRepository.deleteById(id);

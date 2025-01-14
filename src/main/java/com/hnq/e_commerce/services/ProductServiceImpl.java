@@ -1,11 +1,15 @@
 package com.hnq.e_commerce.services;
 
+import com.hnq.e_commerce.auth.exceptions.ErrorCode;
 import com.hnq.e_commerce.dto.ProductDto;
 import com.hnq.e_commerce.entities.Product;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.mapper.ProductMapper;
 import com.hnq.e_commerce.repositories.ProductRepository;
 import com.hnq.e_commerce.specification.ProductSpecification;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -16,12 +20,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductServiceImpl implements ProductService {
-    @Autowired
-    private ProductRepository productRepository;
 
-    @Autowired
-    private ProductMapper productMapper;
+    ProductRepository productRepository;
+    ProductMapper productMapper;
+
 
     @Override
     public Product addProduct(ProductDto productDto) {
@@ -41,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
             productSpecification = productSpecification.and(ProductSpecification.hasCategoryTypeId(typeId));
         }
 
-        List<Product> products = productRepository.findAll((Sort) productSpecification);
+        List<Product> products = productRepository.findAll(productSpecification);
         return productMapper.getProductDtos(products);
     }
 
@@ -49,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto getProductBySlug(String slug) {
         Product product= productRepository.findBySlug(slug);
         if(null == product){
-            throw new ResourceNotFoundEx("Product Not Found!");
+            throw new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND);
         }
         ProductDto productDto = productMapper.mapProductToDto(product);
         productDto.setCategoryId(product.getCategory().getId());
@@ -61,7 +66,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto getProductById(UUID id) {
-        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx("Product Not Found!"));
+        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
         ProductDto productDto = productMapper.mapProductToDto(product);
         productDto.setCategoryId(product.getCategory().getId());
         productDto.setCategoryTypeId(product.getCategoryType().getId());
@@ -72,7 +77,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product updateProduct(ProductDto productDto, UUID id) {
-        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx("Product Not Found!"));
+        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
         productDto.setId(product.getId());
         return productRepository.save(productMapper.mapToProductEntity(productDto));
     }

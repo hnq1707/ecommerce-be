@@ -1,11 +1,15 @@
 package com.hnq.e_commerce.services;
 
+import com.hnq.e_commerce.auth.exceptions.ErrorCode;
 import com.hnq.e_commerce.dto.CategoryDto;
 import com.hnq.e_commerce.dto.CategoryTypeDto;
 import com.hnq.e_commerce.entities.Category;
 import com.hnq.e_commerce.entities.CategoryType;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.CategoryRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +19,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryService {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+
+    CategoryRepository categoryRepository;
 
     public Category getCategory(UUID id) {
         Optional<Category> category = categoryRepository.findById(id);
@@ -68,8 +75,8 @@ public class CategoryService {
 
     public Category updateCategory(CategoryDto categoryDto, UUID categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundEx(
-                        "Category not found with Id " + categoryDto.getId()));
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.CATEGORY_NOT_FOUND));
+
 
         if (null != categoryDto.getName()) {
             category.setName(categoryDto.getName());

@@ -1,7 +1,7 @@
 package com.hnq.e_commerce.auth.controllers;
 
-import com.hnq.e_commerce.auth.config.JWTTokenHelper;
 import com.hnq.e_commerce.auth.entities.User;
+import com.hnq.e_commerce.auth.services.AuthenticationService;
 import com.hnq.e_commerce.auth.services.OAuth2Service;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -23,7 +24,7 @@ public class OAuth2Controller {
     OAuth2Service oAuth2Service;
 
     @Autowired
-    private JWTTokenHelper jwtTokenHelper;
+    private AuthenticationService authSerivce;
 
     @GetMapping("/success")
     public void callbackOAuth2(
@@ -32,12 +33,12 @@ public class OAuth2Controller {
                               ) throws IOException {
 
         String userName = oAuth2User.getAttribute("email");
-        User user = oAuth2Service.getUser(userName);
+        Optional<User> user = oAuth2Service.getUser(userName);
         if (null == user) {
-            user = oAuth2Service.createUser(oAuth2User, "google");
+            user = Optional.ofNullable(oAuth2Service.createUser(oAuth2User, "google"));
         }
 
-        String token = jwtTokenHelper.generateToken(user.getUsername());
+        String token = authSerivce.generateToken(user);
 
         response.sendRedirect(
                 "http://localhost:3000/oauth2/callback?token=" + token);

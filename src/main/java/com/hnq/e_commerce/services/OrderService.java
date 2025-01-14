@@ -1,7 +1,8 @@
 package com.hnq.e_commerce.services;
 
-import com.hnq.e_commerce.auth.dto.OrderResponse;
+import com.hnq.e_commerce.auth.dto.response.OrderResponse;
 import com.hnq.e_commerce.auth.entities.User;
+import com.hnq.e_commerce.auth.services.UserService;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderItemDetail;
 import com.hnq.e_commerce.dto.OrderRequest;
@@ -9,8 +10,12 @@ import com.hnq.e_commerce.entities.*;
 import com.hnq.e_commerce.repositories.OrderRepository;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -18,27 +23,34 @@ import java.security.Principal;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
 
-    @Autowired
-    private OrderRepository orderRepository;
 
-    @Autowired
+
+    OrderRepository orderRepository;
+
+
     ProductService productService;
 
-    @Autowired
+
     PaymentIntentService paymentIntentService;
 
 
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest, Principal principal) throws Exception {
-        User user = (User) userDetailsService.loadUserByUsername(principal.getName());
-        Address address = user.getAddressList().stream().filter(address1 -> orderRequest.getAddressId().equals(address1.getId())).findFirst().orElseThrow(BadRequestException::new);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        Order order= Order.builder()
+        // Kiểm tra và tìm địa chỉ
+        Address address = user.getAddressList().stream()
+                .filter(address1 -> orderRequest.getAddressId().equals(address1.getId()))
+                .findFirst()
+                .orElseThrow(BadRequestException::new);
+
+        // Tạo đối tượng Order
+        Order order = Order.builder()
                 .user(user)
                 .address(address)
                 .totalAmount(orderRequest.getTotalAmount())
@@ -48,42 +60,51 @@ public class OrderService {
                 .paymentMethod(orderRequest.getPaymentMethod())
                 .orderStatus(OrderStatus.PENDING)
                 .build();
-        List<OrderItem> orderItems = orderRequest.getOrderItemRequests().stream().map(orderItemRequest -> {
-            try {
-                Product product= productService.fetchProductById(orderItemRequest.getProductId());
-                OrderItem orderItem= OrderItem.builder()
-                        .product(product)
-                        .productVariantId(orderItemRequest.getProductVariantId())
-                        .quantity(orderItemRequest.getQuantity())
-                        .order(order)
-                        .build();
-                return orderItem;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).toList();
 
+        // Tạo danh sách OrderItem
+        List<OrderItem> orderItems = orderRequest.getOrderItemRequests().stream()
+                .map(orderItemRequest -> {
+                    try {
+                        Product product = productService.fetchProductById(orderItemRequest.getProductId());
+                        return OrderItem.builder()
+                                .product(product)
+                                .productVariantId(orderItemRequest.getProductVariantId())
+                                .quantity(orderItemRequest.getQuantity())
+                                .order(order)
+                                .build();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to fetch product or create order item", e);
+                    }
+                })
+                .toList();
+
+        // Gán danh sách OrderItem vào Order
         order.setOrderItemList(orderItems);
-        Payment payment=new Payment();
+
+        // Tạo đối tượng Payment
+        Payment payment = new Payment();
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setPaymentDate(new Date());
         payment.setOrder(order);
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentMethod(order.getPaymentMethod());
         order.setPayment(payment);
+
+        // Lưu Order vào cơ sở dữ liệu
         Order savedOrder = orderRepository.save(order);
 
-
+        // Tạo OrderResponse
         OrderResponse orderResponse = OrderResponse.builder()
                 .paymentMethod(orderRequest.getPaymentMethod())
                 .orderId(savedOrder.getId())
                 .build();
-        if(Objects.equals(orderRequest.getPaymentMethod(), "CARD")){
+
+        // Nếu phương thức thanh toán là CARD, tạo PaymentIntent
+        if (Objects.equals(orderRequest.getPaymentMethod(), "CARD")) {
             orderResponse.setCredentials(paymentIntentService.createPaymentIntent(order));
         }
 
         return orderResponse;
-
     }
 
     public Map<String,String> updateStatus(String paymentIntentId, String status) {
@@ -114,7 +135,7 @@ public class OrderService {
     }
 
     public List<OrderDetails> getOrdersByUser(String name) {
-        User user = (User) userDetailsService.loadUserByUsername(name);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Order> orders = orderRepository.findByUser(user);
         return orders.stream().map(order -> {
             return OrderDetails.builder()
@@ -145,15 +166,15 @@ public class OrderService {
     }
 
     public void cancelOrder(UUID id, Principal principal) {
-        User user = (User) userDetailsService.loadUserByUsername(principal.getName());
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Order order = orderRepository.findById(id).get();
-        if(null != order && order.getUser().getId().equals(user.getId())){
+        if(order.getUser().getId().equals(user.getId())){
             order.setOrderStatus(OrderStatus.CANCELLED);
             //logic to refund amount
             orderRepository.save(order);
         }
         else{
-            new RuntimeException("Invalid request");
+            throw new RuntimeException("Invalid request");
         }
 
     }

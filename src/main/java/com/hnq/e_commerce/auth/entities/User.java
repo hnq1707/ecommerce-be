@@ -4,69 +4,52 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hnq.e_commerce.entities.Address;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.hnq.e_commerce.auth.entities.Role;
+import lombok.experimental.FieldDefaults;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Table(name = "AUTH_USER_DETAILS")
-@Entity
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User implements UserDetails {
-
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
+public class User {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    String id;
 
-    private String firstName;
+     String firstName;
 
-    private String lastName;
+     String lastName;
 
     @JsonIgnore
-    private String password;
+     String password;
 
-    private Date createdOn;
+     Date createdOn;
 
-    private Date updatedOn;
+     Date updatedOn;
 
     @Column(nullable = false, unique = true)
-    private String email;
+     String email;
 
-    private String phoneNumber;
+     String phoneNumber;
 
-    private String provider;
+     String provider;
 
-    private String verificationCode;
+     String verificationCode;
 
-    private boolean enabled = false;
+     boolean enabled = false;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinTable(name = "AUTH_USER_AUTHORITY", joinColumns = @JoinColumn(referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(referencedColumnName = "id"))
-    private List<Authority> authorities;
+    @ManyToMany
+     Set<Role> roles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private List<Address> addressList;
+     List<Address> addressList;
 
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
 }

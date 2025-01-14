@@ -1,56 +1,44 @@
 package com.hnq.e_commerce.services;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FileUploadService {
 
-    @Value("${FILE_ZONE}")
-    private String storageZone;
 
-    @Value("${FILE_UPLOAD_API_KEY}")
-    private String fileUploadKey;
+    Cloudinary cloudinaryConfig;
 
-    @Value("${FILE_UPLOAD_HOST_URL}")
-    private String fileHostName;
-
-    public int uploadFile(MultipartFile file,String fileName){
-
+    public String uploadFile(MultipartFile file) {
         try {
-            String urlString =  fileHostName+"/"+storageZone+"/"+fileName;
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("PUT");
-            connection.setRequestProperty("AccessKey",fileUploadKey);
-            connection.setRequestProperty("Content-Type", "application/octet-stream");
-            connection.setDoOutput(true);
-
-
-            long fileSize = file.getSize();
-
-            try (BufferedInputStream inputStream = new BufferedInputStream(file.getInputStream());
-                 BufferedOutputStream outputStream = new BufferedOutputStream(connection.getOutputStream())) {
-
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-            }
-
-            int responseCode = connection.getResponseCode();
-            String responseMsg = connection.getResponseMessage();
-            return responseCode;
-        }
-        catch (Exception e){
-            return 500;
+            File uploadedFile = convertMultiPartToFile(file);
+            Map uploadResult = cloudinaryConfig.uploader().upload(uploadedFile, ObjectUtils.emptyMap());
+            return  uploadResult.get("url").toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
+
+    private File convertMultiPartToFile(MultipartFile file) throws IOException {
+        File convFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
+        FileOutputStream fos = new FileOutputStream(convFile);
+        fos.write(file.getBytes());
+        fos.close();
+        return convFile;
+    }
+
 }

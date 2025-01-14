@@ -1,9 +1,13 @@
 package com.hnq.e_commerce.controllers;
 
+import com.hnq.e_commerce.dto.ApiResponse;
 import com.hnq.e_commerce.dto.ProductDto;
 import com.hnq.e_commerce.entities.Product;
 import com.hnq.e_commerce.services.ProductService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,17 +20,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
 
-    private final ProductService productService;
+    ProductService productService;
 
-    @Autowired
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
+
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts(@RequestParam(required = false,name = "categoryId",value = "categoryId") UUID categoryId, @RequestParam(required = false,name = "typeId",value = "typeId") UUID typeId, @RequestParam(required = false) String slug, HttpServletResponse response){
+    public ApiResponse<List<ProductDto>> getAllProducts(@RequestParam(required = false,name = "categoryId",value = "categoryId") UUID categoryId, @RequestParam(required = false,name = "typeId",value = "typeId") UUID typeId, @RequestParam(required = false) String slug, HttpServletResponse response){
         List<ProductDto> productList = new ArrayList<>();
         if(StringUtils.isNotBlank(slug)){
             ProductDto productDto = productService.getProductBySlug(slug);
@@ -36,25 +39,32 @@ public class ProductController {
             productList = productService.getAllProducts(categoryId, typeId);
         }
         response.setHeader("Content-Range",String.valueOf(productList.size()));
-        return new ResponseEntity<>(productList, HttpStatus.OK);
+        return ApiResponse.<List<ProductDto>>builder().result(productList).build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProductById(@PathVariable UUID id){
+    public ApiResponse<ProductDto> getProductById(@PathVariable UUID id){
         ProductDto productDto = productService.getProductById(id);
-        return new ResponseEntity<>(productDto, HttpStatus.OK);
+        return ApiResponse.<ProductDto>builder().result(productDto).build();
     }
 
     //   create Product
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody ProductDto productDto){
+    public ApiResponse<Product> createProduct(@RequestBody ProductDto productDto){
         Product product = productService.addProduct(productDto);
-        return new ResponseEntity<>(product,HttpStatus.CREATED);
+        return ApiResponse.<Product>builder()
+                .code(HttpStatus.CREATED.value())
+                .message(HttpStatus.CREATED.getReasonPhrase())
+                .result(product)
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@RequestBody ProductDto productDto,@PathVariable UUID id){
+    public ApiResponse<Product> updateProduct(@RequestBody ProductDto productDto,@PathVariable UUID id){
         Product product = productService.updateProduct(productDto,id);
-        return new ResponseEntity<>(product,HttpStatus.OK);
+        return ApiResponse.<Product>builder()
+                .message("Update successfully")
+                .result(product)
+                .build();
     }
 }

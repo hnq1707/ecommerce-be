@@ -1,93 +1,84 @@
 package com.hnq.e_commerce.auth.controllers;
 
-import com.hnq.e_commerce.auth.config.JWTTokenHelper;
-import com.hnq.e_commerce.auth.dto.LoginRequest;
-import com.hnq.e_commerce.auth.dto.RegistrationRequest;
-import com.hnq.e_commerce.auth.dto.RegistrationResponse;
-import com.hnq.e_commerce.auth.dto.UserToken;
+import com.hnq.e_commerce.auth.dto.request.*;
+import com.hnq.e_commerce.auth.dto.response.AuthenticationResponse;
+import com.hnq.e_commerce.auth.dto.response.IntrospectResponse;
+import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.entities.User;
-import com.hnq.e_commerce.auth.services.RegistrationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.hnq.e_commerce.auth.exceptions.ErrorCode;
+import com.hnq.e_commerce.auth.repositories.UserRepository;
+import com.hnq.e_commerce.auth.services.AuthenticationService;
+import com.hnq.e_commerce.auth.services.UserService;
+import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.exception.ResourceNotFoundEx;
+import com.nimbusds.jose.JOSEException;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.text.ParseException;
 import java.util.Map;
 
+
 @RestController
-@CrossOrigin
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
 
-    @Autowired
-    AuthenticationManager authenticationManager;
-
-    @Autowired
-    RegistrationService registrationService;
-
-    @Autowired
-    UserDetailsService userDetailsService;
-
-    @Autowired
-    JWTTokenHelper jwtTokenHelper;
-
-
-    @PostMapping("/login")
-    public ResponseEntity<UserToken> login(@RequestBody LoginRequest loginRequest) {
-        try {
-            Authentication authentication = UsernamePasswordAuthenticationToken.unauthenticated(
-                    loginRequest.getUserName(),
-                    loginRequest.getPassword()
-                                                                                               );
-
-            Authentication authenticationResponse = this.authenticationManager.authenticate(
-                    authentication);
-
-            if (authenticationResponse.isAuthenticated()) {
-                User user = (User) authenticationResponse.getPrincipal();
-                if (!user.isEnabled()) {
-                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-                }
-
-                String token = jwtTokenHelper.generateToken(user.getEmail());
-                UserToken userToken = UserToken.builder().token(token).build();
-                return new ResponseEntity<>(userToken, HttpStatus.OK);
-            }
-
-        } catch (BadCredentialsException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-    }
+    AuthenticationService authenticationService;
+    UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponse> register(@RequestBody RegistrationRequest request) {
-        RegistrationResponse registrationResponse = registrationService.createUser(
-                request);
+    ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.createUser(request))
+                .build();
+    }
 
-        return new ResponseEntity<>(
-                registrationResponse,
-                registrationResponse.getCode() ==
-                        200 ? HttpStatus.OK : HttpStatus.BAD_REQUEST
-        );
+    @PostMapping("/token")
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+        var result = authenticationService.authenticate(request);
+        return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/introspect")
+    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.introspect(request);
+        return ApiResponse.<IntrospectResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder().build();
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> map) {
-        String userName = map.get("userName");
-        String code = map.get("code");
+    ApiResponse<Void> verifyCode(@RequestBody Map<String,String> request){
+        String username = request.get("username");
+        String code = request.get("code");
 
-        User user = (User) userDetailsService.loadUserByUsername(userName);
-        if (null != user && user.getVerificationCode().equals(code)) {
-            registrationService.verifyUser(userName);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        User user =
+                userRepository.findByEmail(username).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+        userService.verifyCode(username);
+        return ApiResponse.<Void>builder().build();
     }
 }
+

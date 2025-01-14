@@ -1,4 +1,4 @@
-package com.hnq.e_commerce.auth.dto;
+package com.hnq.e_commerce.auth.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegistrationResponse {
-
-    private int code;
-    private String message;
-
+public class LoginRequest {
+    private String userName;
+    private CharSequence password;
 }
