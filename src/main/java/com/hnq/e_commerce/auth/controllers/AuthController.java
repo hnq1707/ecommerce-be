@@ -12,6 +12,7 @@ import com.hnq.e_commerce.auth.services.UserService;
 import com.hnq.e_commerce.dto.ApiResponse;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.nimbusds.jose.JOSEException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,10 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        var result = authenticationService.authenticate(request);
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request,
+                                                     HttpServletResponse response) throws ParseException, JOSEException
+    {
+        var result = authenticationService.authenticate(request, response);
         return ApiResponse.<AuthenticationResponse>builder().result(result).build();
     }
 

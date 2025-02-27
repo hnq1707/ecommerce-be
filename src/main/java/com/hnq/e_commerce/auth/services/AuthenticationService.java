@@ -17,6 +17,8 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -68,10 +70,12 @@ public class AuthenticationService {
         return IntrospectResponse.builder().valid(isValid).build();
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    public AuthenticationResponse authenticate(AuthenticationRequest request,
+                                               HttpServletResponse response) throws ParseException, JOSEException
+    {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         User user = userRepository
-                .findByEmail(request.getUsername())
+                .findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -81,7 +85,14 @@ public class AuthenticationService {
         var token = generateToken(Optional.of(user));
 
         var refreshToken = generateRefreshToken(Optional.of(user));
-        return AuthenticationResponse.builder().accessToken(token).refreshToken(refreshToken).authenticated(true).build();
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) VALID_DURATION);
+        cookie.setSecure(false);
+        response.addCookie(cookie);
+        return AuthenticationResponse.builder().id(user.getId()).email(user.getEmail())
+                .accessToken(token).authenticated(true).build();
     }
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
@@ -118,7 +129,7 @@ public class AuthenticationService {
 
         var token = generateToken(Optional.ofNullable(user));
 
-        return AuthenticationResponse.builder().accessToken(token).refreshToken(request.getToken()).authenticated(true).build();
+        return AuthenticationResponse.builder().accessToken(token).authenticated(true).build();
     }
 
     public String generateToken(Optional<User> user) {

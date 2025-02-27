@@ -2,6 +2,8 @@ package com.hnq.e_commerce.auth.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 
 @Data
 @NoArgsConstructor
@@ -9,7 +11,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationResponse {
+    String id;
+    String email;
     String accessToken;
-    String refreshToken;
+    List<String> roles;
     boolean authenticated;
 }
