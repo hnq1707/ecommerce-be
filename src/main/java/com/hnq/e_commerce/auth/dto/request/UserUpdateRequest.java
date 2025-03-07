@@ -1,12 +1,8 @@
 package com.hnq.e_commerce.auth.dto.request;
 
 
-import com.hnq.e_commerce.entities.Address;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-
 
 
 @Data

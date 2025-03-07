@@ -6,19 +6,15 @@ import com.hnq.e_commerce.dto.ApiResponse;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderRequest;
 import com.hnq.e_commerce.services.OrderService;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -29,9 +25,7 @@ import java.util.UUID;
 public class OrderController {
 
 
-
     OrderService orderService;
-
 
 
     @PostMapping
@@ -46,14 +40,14 @@ public class OrderController {
     }
 
     @PostMapping("/update-payment")
-    public ApiResponse<?> updatePaymentStatus(@RequestBody Map<String,String> request){
-        Map<String,String> response = orderService.updateStatus(request.get("paymentIntent"),request.get("status"));
+    public ApiResponse<?> updatePaymentStatus(@RequestBody Map<String, String> request) {
+        Map<String, String> response = orderService.updateStatus(request.get("paymentIntent"), request.get("status"));
         return ApiResponse.builder().build();
     }
 
     @PostMapping("/cancel/{id}")
-    public ApiResponse<?> cancelOrder(@PathVariable UUID id,Principal principal){
-        orderService.cancelOrder(id,principal);
+    public ApiResponse<?> cancelOrder(@PathVariable UUID id, Principal principal) {
+        orderService.cancelOrder(id, principal);
         return ApiResponse.builder().build();
     }
 

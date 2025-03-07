@@ -1,9 +1,7 @@
 package com.hnq.e_commerce.auth.entities;
 
-import lombok.Getter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

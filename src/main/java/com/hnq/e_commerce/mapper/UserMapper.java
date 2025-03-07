@@ -1,13 +1,12 @@
 package com.hnq.e_commerce.mapper;
 
-import com.hnq.e_commerce.auth.dto.request.UserUpdateRequest;
 import com.hnq.e_commerce.auth.dto.request.UserCreationRequest;
+import com.hnq.e_commerce.auth.dto.request.UserUpdateRequest;
 import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

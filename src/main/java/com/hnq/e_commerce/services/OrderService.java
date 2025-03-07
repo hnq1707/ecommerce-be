@@ -2,7 +2,6 @@ package com.hnq.e_commerce.services;
 
 import com.hnq.e_commerce.auth.dto.response.OrderResponse;
 import com.hnq.e_commerce.auth.entities.User;
-import com.hnq.e_commerce.auth.services.UserService;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderItemDetail;
 import com.hnq.e_commerce.dto.OrderRequest;
@@ -14,9 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -26,8 +23,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
-
-
 
 
     OrderRepository orderRepository;
@@ -107,13 +102,13 @@ public class OrderService {
         return orderResponse;
     }
 
-    public Map<String,String> updateStatus(String paymentIntentId, String status) {
+    public Map<String, String> updateStatus(String paymentIntentId, String status) {
 
-        try{
-            PaymentIntent paymentIntent= PaymentIntent.retrieve(paymentIntentId);
+        try {
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
             if (paymentIntent != null && paymentIntent.getStatus().equals("succeeded")) {
-                String orderId = paymentIntent.getMetadata().get("orderId") ;
-                Order order= orderRepository.findById(UUID.fromString(orderId)).orElseThrow(BadRequestException::new);
+                String orderId = paymentIntent.getMetadata().get("orderId");
+                Order order = orderRepository.findById(UUID.fromString(orderId)).orElseThrow(BadRequestException::new);
                 Payment payment = order.getPayment();
                 payment.setPaymentStatus(PaymentStatus.COMPLETED);
                 payment.setPaymentMethod(paymentIntent.getPaymentMethod());
@@ -121,15 +116,13 @@ public class OrderService {
                 order.setOrderStatus(OrderStatus.IN_PROGRESS);
                 order.setPayment(payment);
                 Order savedOrder = orderRepository.save(order);
-                Map<String,String> map = new HashMap<>();
+                Map<String, String> map = new HashMap<>();
                 map.put("orderId", String.valueOf(savedOrder.getId()));
                 return map;
-            }
-            else{
+            } else {
                 throw new IllegalArgumentException("PaymentIntent not found or missing metadata");
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             throw new IllegalArgumentException("PaymentIntent not found or missing metadata");
         }
     }
@@ -168,12 +161,11 @@ public class OrderService {
     public void cancelOrder(UUID id, Principal principal) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Order order = orderRepository.findById(id).get();
-        if(order.getUser().getId().equals(user.getId())){
+        if (order.getUser().getId().equals(user.getId())) {
             order.setOrderStatus(OrderStatus.CANCELLED);
             //logic to refund amount
             orderRepository.save(order);
-        }
-        else{
+        } else {
             throw new RuntimeException("Invalid request");
         }
 

@@ -15,6 +15,6 @@ import java.util.UUID;
 public class OrderResponse {
 
     private UUID orderId;
-    private Map<String,String> credentials;
+    private Map<String, String> credentials;
     private String paymentMethod;
 }

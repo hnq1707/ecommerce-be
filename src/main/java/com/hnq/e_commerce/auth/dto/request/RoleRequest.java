@@ -1,10 +1,9 @@
 package com.hnq.e_commerce.auth.dto.request;
 
-import java.util.Set;
-
-import com.hnq.e_commerce.auth.entities.Permission;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Data
 @NoArgsConstructor

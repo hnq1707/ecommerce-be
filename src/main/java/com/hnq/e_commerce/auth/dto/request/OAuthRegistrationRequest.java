@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OAuthRegistrationRequest {
-     String email;
-     String name;
-     String image;
-     String provider;
+    String email;
+    String name;
+    String image;
+    String provider;
 }

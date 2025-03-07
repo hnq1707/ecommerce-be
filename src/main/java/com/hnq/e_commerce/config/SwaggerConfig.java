@@ -16,6 +16,6 @@ public class SwaggerConfig {
                 .info(new Info().title("E-Commerce API")
                               .version("1.0")
                               .contact(new Contact().name("HNQ"))
-                     );
+                );
     }
 }

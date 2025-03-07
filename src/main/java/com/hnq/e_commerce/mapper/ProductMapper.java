@@ -18,9 +18,9 @@ public class ProductMapper {
     @Autowired
     private CategoryService categoryService;
 
-    public Product mapToProductEntity(ProductDto productDto){
+    public Product mapToProductEntity(ProductDto productDto) {
         Product product = new Product();
-        if(null != productDto.getId()){
+        if (null != productDto.getId()) {
             product.setId(productDto.getId());
         }
         product.setName(productDto.getName());
@@ -32,7 +32,7 @@ public class ProductMapper {
         product.setSlug(productDto.getSlug());
 
         Category category = categoryService.getCategory(productDto.getCategoryId());
-        if(null != category){
+        if (null != category) {
             product.setCategory(category);
             UUID categoryTypeId = productDto.getCategoryTypeId();
 
@@ -40,14 +40,13 @@ public class ProductMapper {
             product.setCategoryType(categoryType);
         }
 
-        if(null != productDto.getVariants()){
-            product.setProductVariants(mapToProductVariant(productDto.getVariants(),product));
+        if (null != productDto.getVariants()) {
+            product.setProductVariants(mapToProductVariant(productDto.getVariants(), product));
         }
 
-        if(null != productDto.getProductResources()){
-            product.setResources(mapToProductResources(productDto.getProductResources(),product));
+        if (null != productDto.getProductResources()) {
+            product.setResources(mapToProductResources(productDto.getProductResources(), product));
         }
-
 
 
         return product;
@@ -56,8 +55,8 @@ public class ProductMapper {
     private List<Resources> mapToProductResources(List<ProductResourceDto> productResources, Product product) {
 
         return productResources.stream().map(productResourceDto -> {
-            Resources resources= new Resources();
-            if(null != productResourceDto.getId()){
+            Resources resources = new Resources();
+            if (null != productResourceDto.getId()) {
                 resources.setId(productResourceDto.getId());
             }
             resources.setName(productResourceDto.getName());
@@ -69,10 +68,10 @@ public class ProductMapper {
         }).collect(Collectors.toList());
     }
 
-    private List<ProductVariant> mapToProductVariant(List<ProductVariantDto> productVariantDtos, Product product){
+    private List<ProductVariant> mapToProductVariant(List<ProductVariantDto> productVariantDtos, Product product) {
         return productVariantDtos.stream().map(productVariantDto -> {
             ProductVariant productVariant = new ProductVariant();
-            if(null != productVariantDto.getId()){
+            if (null != productVariantDto.getId()) {
                 productVariant.setId(productVariantDto.getId());
             }
             productVariant.setColor(productVariantDto.getColor());

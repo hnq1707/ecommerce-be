@@ -9,12 +9,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,30 +27,33 @@ public class ProductController {
     ProductService productService;
 
 
-
     @GetMapping
-    public ApiResponse<List<ProductDto>> getAllProducts(@RequestParam(required = false,name = "categoryId",value = "categoryId") UUID categoryId, @RequestParam(required = false,name = "typeId",value = "typeId") UUID typeId, @RequestParam(required = false) String slug, HttpServletResponse response){
-        List<ProductDto> productList = new ArrayList<>();
-        if(StringUtils.isNotBlank(slug)){
+    public ApiResponse<Page<ProductDto>> getAllProducts(@RequestParam(required = false, name =
+                                                                "categoryId", value = "categoryId") UUID categoryId, @RequestParam(required = false,
+                                                                name = "typeId", value = "typeId") UUID typeId,
+                                                        @RequestParam(required = false) String slug, Pageable pageable, HttpServletResponse response)
+    {
+        if (StringUtils.isNotBlank(slug)) {
             ProductDto productDto = productService.getProductBySlug(slug);
-            productList.add(productDto);
+            return ApiResponse.<Page<ProductDto>>builder()
+                    .result(new PageImpl<>(List.of(productDto), pageable, 1))
+                    .build();
+        } else {
+            Page<ProductDto> productPage = productService.getAllProducts(categoryId, typeId, pageable);
+            response.setHeader("Content-Range", String.valueOf(productPage.getTotalElements()));
+            return ApiResponse.<Page<ProductDto>>builder().result(productPage).build();
         }
-        else {
-            productList = productService.getAllProducts(categoryId, typeId);
-        }
-        response.setHeader("Content-Range",String.valueOf(productList.size()));
-        return ApiResponse.<List<ProductDto>>builder().result(productList).build();
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ProductDto> getProductById(@PathVariable UUID id){
+    public ApiResponse<ProductDto> getProductById(@PathVariable UUID id) {
         ProductDto productDto = productService.getProductById(id);
         return ApiResponse.<ProductDto>builder().result(productDto).build();
     }
 
     //   create Product
     @PostMapping
-    public ApiResponse<Product> createProduct(@RequestBody ProductDto productDto){
+    public ApiResponse<Product> createProduct(@RequestBody ProductDto productDto) {
         Product product = productService.addProduct(productDto);
         return ApiResponse.<Product>builder()
                 .code(HttpStatus.CREATED.value())
@@ -60,8 +63,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Product> updateProduct(@RequestBody ProductDto productDto,@PathVariable UUID id){
-        Product product = productService.updateProduct(productDto,id);
+    public ApiResponse<Product> updateProduct(@RequestBody ProductDto productDto, @PathVariable UUID id) {
+        Product product = productService.updateProduct(productDto, id);
         return ApiResponse.<Product>builder()
                 .message("Update successfully")
                 .result(product)

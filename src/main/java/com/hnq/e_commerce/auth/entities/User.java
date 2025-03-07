@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hnq.e_commerce.entities.Address;
 import jakarta.persistence.*;
 import lombok.*;
-import com.hnq.e_commerce.auth.entities.Role;
 import lombok.experimental.FieldDefaults;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Table(name = "AUTH_USER_DETAILS")
 @Getter
@@ -22,36 +23,36 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-     String firstName;
+    String firstName;
 
-     String lastName;
+    String lastName;
 
-     String imageUrl;
+    String imageUrl;
 
     @JsonIgnore
-     String password;
+    String password;
 
-     Date createdOn;
+    Date createdOn;
 
-     Date updatedOn;
+    Date updatedOn;
 
     @Column(nullable = false, unique = true)
-     String email;
+    String email;
 
-     String phoneNumber;
+    String phoneNumber;
 
-     String provider;
+    String provider;
 
-     String verificationCode;
+    String verificationCode;
 
-     boolean enabled = false;
+    boolean enabled = false;
 
     @ManyToMany
-     Set<Role> roles;
+    Set<Role> roles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @ToString.Exclude
-     List<Address> addressList;
+    List<Address> addressList;
 
 
 }

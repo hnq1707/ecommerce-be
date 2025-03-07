@@ -2,13 +2,15 @@ package com.hnq.e_commerce.services;
 
 import com.hnq.e_commerce.dto.ProductDto;
 import com.hnq.e_commerce.entities.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
     Product addProduct(ProductDto product);
-    List<ProductDto> getAllProducts(UUID categoryId, UUID typeId);
+
+    Page<ProductDto> getAllProducts(UUID categoryId, UUID typeId, Pageable pageable);
 
     ProductDto getProductBySlug(String slug);
 

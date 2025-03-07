@@ -18,8 +18,10 @@ public class FileUploadService {
     public String uploadFile(MultipartFile file) {
         try {
             // Upload file trực tiếp lên Cloudinary
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                                                            ObjectUtils.asMap("resource_type", "auto"));
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("resource_type", "auto")
+            );
 
             // Lấy đường dẫn an toàn từ Cloudinary
             return uploadResult.get("secure_url").toString();

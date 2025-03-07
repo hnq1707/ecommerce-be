@@ -11,12 +11,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,25 +35,25 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getAllProducts(UUID categoryId, UUID typeId) {
+    public Page<ProductDto> getAllProducts(UUID categoryId, UUID typeId, Pageable pageable) {
+        Specification<Product> productSpecification = Specification.where(null);
 
-        Specification<Product> productSpecification= Specification.where(null);
-
-        if(null != categoryId){
+        if (categoryId != null) {
             productSpecification = productSpecification.and(ProductSpecification.hasCategoryId(categoryId));
         }
-        if(null != typeId){
+        if (typeId != null) {
             productSpecification = productSpecification.and(ProductSpecification.hasCategoryTypeId(typeId));
         }
 
-        List<Product> products = productRepository.findAll(productSpecification);
-        return productMapper.getProductDtos(products);
+        Pageable customPageable = PageRequest.of(pageable.getPageNumber(), 9, pageable.getSort());
+        Page<Product> products = productRepository.findAll(productSpecification, customPageable);
+        return products.map(productMapper::mapProductToDto);
     }
 
     @Override
     public ProductDto getProductBySlug(String slug) {
-        Product product= productRepository.findBySlug(slug);
-        if(null == product){
+        Product product = productRepository.findBySlug(slug);
+        if (null == product) {
             throw new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND);
         }
         ProductDto productDto = productMapper.mapProductToDto(product);
@@ -66,7 +66,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto getProductById(UUID id) {
-        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
         ProductDto productDto = productMapper.mapProductToDto(product);
         productDto.setCategoryId(product.getCategory().getId());
         productDto.setCategoryTypeId(product.getCategoryType().getId());
@@ -77,7 +77,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product updateProduct(ProductDto productDto, UUID id) {
-        Product product= productRepository.findById(id).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
         productDto.setId(product.getId());
         return productRepository.save(productMapper.mapToProductEntity(productDto));
     }

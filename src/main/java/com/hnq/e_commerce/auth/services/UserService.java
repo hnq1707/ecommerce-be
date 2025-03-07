@@ -18,13 +18,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -96,6 +98,7 @@ public class UserService {
         return userMapper.toUserResponse(
                 userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED)));
     }
+
     public void verifyCode(VerifyRequest request) {
         String email = request.getEmail();
         String code = request.getCode();
@@ -106,13 +109,20 @@ public class UserService {
                 user.setEnabled(true);
                 user.setUpdatedOn(new Date());
                 userRepository.save(user);
-            }
-            else {
+            } else {
                 throw new ResourceNotFoundEx(ErrorCode.INVALID_KEY);
             }
         } else {
             throw new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED);
         }
+    }
+
+    public void renewVerificationCode(String email) {
+        String code = VerificationCodeGenerator.generateCode();
+        User user =
+                userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+        user.setVerificationCode(code);
+        emailService.sendMail(user);
     }
 
 }

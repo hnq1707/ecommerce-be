@@ -2,7 +2,6 @@ package com.hnq.e_commerce.auth.services;
 
 import com.hnq.e_commerce.auth.dto.request.RoleRequest;
 import com.hnq.e_commerce.auth.dto.response.RoleResponse;
-import com.hnq.e_commerce.auth.entities.Role;
 import com.hnq.e_commerce.auth.repositories.PermissionRepository;
 import com.hnq.e_commerce.auth.repositories.RoleRepository;
 import com.hnq.e_commerce.mapper.RoleMapper;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

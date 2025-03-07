@@ -28,13 +28,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -100,6 +101,7 @@ public class AuthenticationService {
         return AuthenticationResponse.builder().id(user.getId()).email(user.getEmail())
                 .accessToken(token).authenticated(true).build();
     }
+
     public UserResponse verifyOrCreateUser(OAuthRegistrationRequest request) {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
@@ -125,6 +127,7 @@ public class AuthenticationService {
             }
         }
     }
+
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
             var signToken = verifyToken(request.getToken(), true);
@@ -187,6 +190,7 @@ public class AuthenticationService {
             throw new RuntimeException(e);
         }
     }
+
     private String generateRefreshToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
@@ -229,7 +233,8 @@ public class AuthenticationService {
 
         var verified = signedJWT.verify(verifier);
 
-        if (!(verified && expiryTime.after(new Date()))) throw new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED);
+        if (!(verified && expiryTime.after(new Date())))
+            throw new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED);
 
         if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
             throw new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED);
@@ -249,6 +254,7 @@ public class AuthenticationService {
 
         return stringJoiner.toString();
     }
+
     @EventListener(ContextRefreshedEvent.class)
 //    @Scheduled(cron = "0 0 0 * * ?")  //gọi method vào 0h mỗi ngày
     @Transactional

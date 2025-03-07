@@ -1,6 +1,5 @@
 package com.hnq.e_commerce.dto;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

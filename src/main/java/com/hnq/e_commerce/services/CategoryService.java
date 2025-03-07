@@ -10,7 +10,6 @@ import com.hnq.e_commerce.repositories.CategoryRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,7 +47,8 @@ public class CategoryService {
         if (null != categoryDto.getCategoryTypes()) {
             List<CategoryType> categoryTypes = mapToCategoryTypesList(
                     categoryDto.getCategoryTypes(),
-                    category);
+                    category
+            );
             category.setCategoryTypes(categoryTypes);
         }
 
@@ -58,7 +58,8 @@ public class CategoryService {
     private List<CategoryType> mapToCategoryTypesList(
             List<CategoryTypeDto> categoryTypeList,
             Category category
-                                                     ) {
+    )
+    {
         return categoryTypeList.stream().map(categoryTypeDto -> {
             CategoryType categoryType = new CategoryType();
             categoryType.setCode(categoryTypeDto.getCode());

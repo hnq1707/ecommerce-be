@@ -1,7 +1,6 @@
 package com.hnq.e_commerce.auth.config;
 
 import com.hnq.e_commerce.auth.constant.PredefinedRole;
-import com.hnq.e_commerce.auth.entities.Permission;
 import com.hnq.e_commerce.auth.entities.Role;
 import com.hnq.e_commerce.auth.entities.User;
 import com.hnq.e_commerce.auth.repositories.PermissionRepository;
@@ -13,13 +12,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
-import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
@@ -38,7 +35,8 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository,
                                         PermissionRepository permissionRepository
-                                       ) {
+    )
+    {
         log.info("Initializing application.....");
         return args -> {
             if (userRepository.findByEmail(ADMIN_USER_NAME).isEmpty()) {
