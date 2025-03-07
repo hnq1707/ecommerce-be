@@ -3,6 +3,7 @@ package com.hnq.e_commerce.auth.services;
 import com.hnq.e_commerce.auth.constant.PredefinedRole;
 import com.hnq.e_commerce.auth.dto.request.UserCreationRequest;
 import com.hnq.e_commerce.auth.dto.request.UserUpdateRequest;
+import com.hnq.e_commerce.auth.dto.request.VerifyRequest;
 import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.entities.Role;
 import com.hnq.e_commerce.auth.entities.User;
@@ -70,22 +71,18 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
-
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
         userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        var roles = roleRepository.findAllById(request.getRoles());
-        user.setRoles(new HashSet<>(roles));
+        user.setUpdatedOn(new Date());
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String userId) {
-        userRepository.deleteById(UUID.fromString(userId));
+        userRepository.deleteById(userId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -97,14 +94,22 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse getUser(String id) {
         return userMapper.toUserResponse(
-                userRepository.findById(UUID.fromString(id)).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED)));
+                userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED)));
     }
-    public void verifyCode(String userName) {
-        Optional<User> userOptional = userRepository.findByEmail(userName);
+    public void verifyCode(VerifyRequest request) {
+        String email = request.getEmail();
+        String code = request.getCode();
+        Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            user.setEnabled(true);
-            userRepository.save(user);
+            if (userOptional.get().getVerificationCode().equals(code)) {
+                User user = userOptional.get();
+                user.setEnabled(true);
+                user.setUpdatedOn(new Date());
+                userRepository.save(user);
+            }
+            else {
+                throw new ResourceNotFoundEx(ErrorCode.INVALID_KEY);
+            }
         } else {
             throw new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED);
         }

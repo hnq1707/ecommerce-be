@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 public class Upload {
 
@@ -20,8 +23,11 @@ public class Upload {
     private FileUploadService fileUploadService;
 
     @PostMapping("/upload")
-    public ApiResponse<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         String url = fileUploadService.uploadFile(file);
-        return ApiResponse.<String>builder().result("File uploaded successfully: File path :  " + url).build();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "File uploaded successfully");
+        response.put("filePath", url);
+        return ResponseEntity.ok(response);
     }
 }

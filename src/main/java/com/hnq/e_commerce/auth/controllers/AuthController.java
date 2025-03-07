@@ -36,7 +36,6 @@ public class AuthController {
 
     AuthenticationService authenticationService;
     UserService userService;
-    private final UserRepository userRepository;
 
     @PostMapping("/register")
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
@@ -74,14 +73,14 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    ApiResponse<Void> verifyCode(@RequestBody Map<String,String> request){
-        String username = request.get("username");
-        String code = request.get("code");
-
-        User user =
-                userRepository.findByEmail(username).orElseThrow(()-> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
-        userService.verifyCode(username);
+    ApiResponse<Void> verifyCode(@RequestBody VerifyRequest request) {
+        userService.verifyCode(request);
         return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/check-user")
+    ApiResponse<UserResponse> checkUser(@RequestBody OAuthRegistrationRequest request) {
+        return ApiResponse.<UserResponse>builder().result(authenticationService.verifyOrCreateUser(request)).build();
     }
 }
 

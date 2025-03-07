@@ -14,6 +14,5 @@ public class AuthenticationResponse {
     String id;
     String email;
     String accessToken;
-    List<String> roles;
     boolean authenticated;
 }

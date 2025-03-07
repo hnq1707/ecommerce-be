@@ -20,6 +20,7 @@ public class UserResponse {
     private UUID id;
     private String firstName;
     private String lastName;
+    private String imageUrl;
     private String phoneNumber;
     private String email;
     private Set<Role> roles;

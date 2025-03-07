@@ -1,17 +1,19 @@
 package com.hnq.e_commerce.auth.services;
 
-import com.hnq.e_commerce.auth.dto.request.AuthenticationRequest;
-import com.hnq.e_commerce.auth.dto.request.IntrospectRequest;
-import com.hnq.e_commerce.auth.dto.request.RefreshRequest;
-import com.hnq.e_commerce.auth.dto.request.LogoutRequest;
+import com.hnq.e_commerce.auth.constant.PredefinedRole;
+import com.hnq.e_commerce.auth.dto.request.*;
 import com.hnq.e_commerce.auth.dto.response.AuthenticationResponse;
 import com.hnq.e_commerce.auth.dto.response.IntrospectResponse;
+import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.entities.InvalidatedToken;
+import com.hnq.e_commerce.auth.entities.Role;
 import com.hnq.e_commerce.auth.entities.User;
 import com.hnq.e_commerce.auth.exceptions.ErrorCode;
 import com.hnq.e_commerce.auth.repositories.InvalidatedTokenRepository;
+import com.hnq.e_commerce.auth.repositories.RoleRepository;
 import com.hnq.e_commerce.auth.repositories.UserRepository;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
+import com.hnq.e_commerce.mapper.UserMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -26,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,9 @@ import java.util.*;
 public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
+    UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -82,9 +88,9 @@ public class AuthenticationService {
 
         if (!authenticated) throw new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED);
 
-        var token = generateToken(Optional.of(user));
+        var token = generateToken(user);
 
-        var refreshToken = generateRefreshToken(Optional.of(user));
+        var refreshToken = generateRefreshToken(user);
         Cookie cookie = new Cookie("refresh_token", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
@@ -94,7 +100,31 @@ public class AuthenticationService {
         return AuthenticationResponse.builder().id(user.getId()).email(user.getEmail())
                 .accessToken(token).authenticated(true).build();
     }
-
+    public UserResponse verifyOrCreateUser(OAuthRegistrationRequest request) {
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            return userMapper.toUserResponse(existingUser.get());
+        } else {
+            User newUser = new User();
+            newUser.setEmail(request.getEmail());
+            newUser.setFirstName(request.getName());
+            newUser.setLastName(request.getName());
+            newUser.setCreatedOn(new Date());
+            newUser.setUpdatedOn(new Date());
+            newUser.setEnabled(true);
+            newUser.setProvider(request.getProvider());
+            newUser.setImageUrl(request.getImage());
+            HashSet<Role> roles = new HashSet<>();
+            roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+            newUser.setRoles(roles);
+            try {
+                User nUser = userRepository.save(newUser);
+                return userMapper.toUserResponse(nUser);
+            } catch (DataIntegrityViolationException exception) {
+                throw new ResourceNotFoundEx(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+        }
+    }
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
             var signToken = verifyToken(request.getToken(), true);
@@ -127,17 +157,17 @@ public class AuthenticationService {
         var user =
                 userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED));
 
-        var token = generateToken(Optional.ofNullable(user));
+        var token = generateToken(user);
 
         return AuthenticationResponse.builder().accessToken(token).authenticated(true).build();
     }
 
-    public String generateToken(Optional<User> user) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+    private String generateToken(User user) {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.get().getEmail())
-                .issuer("hnqshop")
+                .subject(user.getEmail())
+                .issuer("hnq")
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
@@ -157,11 +187,11 @@ public class AuthenticationService {
             throw new RuntimeException(e);
         }
     }
-    public String generateRefreshToken(Optional<User> user) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+    private String generateRefreshToken(User user) {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.get().getEmail())
+                .subject(user.getEmail())
                 .issuer("hnqshop")
                 .issueTime(new Date())
                 .expirationTime(new Date(
@@ -207,11 +237,11 @@ public class AuthenticationService {
         return signedJWT;
     }
 
-    private String buildScope(Optional<User> user) {
+    private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
 
-        if (!CollectionUtils.isEmpty(user.get().getRoles()))
-            user.get().getRoles().forEach(role -> {
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(role -> {
                 stringJoiner.add("ROLE_" + role.getName());
                 if (!CollectionUtils.isEmpty(role.getPermissions()))
                     role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));

@@ -26,6 +26,8 @@ public class User {
 
      String lastName;
 
+     String imageUrl;
+
     @JsonIgnore
      String password;
 
