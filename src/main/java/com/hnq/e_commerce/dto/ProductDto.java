@@ -28,6 +28,6 @@ public class ProductDto {
     private String categoryName;
     private UUID categoryTypeId;
     private String categoryTypeName;
-    private List<ProductVariantDto> variants;
-    private List<ProductResourceDto> productResources;
+    private List<ProductVariantDto> productVariants;
+    private List<ProductResourceDto> resources;
 }

@@ -12,11 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,7 +32,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product addProduct(ProductDto productDto) {
-        Product product = productMapper.mapToProductEntity(productDto);
+        Product product = productMapper.toEntity(productDto);
         return productRepository.save(product);
     }
 
@@ -47,31 +49,32 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable customPageable = PageRequest.of(pageable.getPageNumber(), 9, pageable.getSort());
         Page<Product> products = productRepository.findAll(productSpecification, customPageable);
-        return products.map(productMapper::mapProductToDto);
-    }
+        List<ProductDto> productDtos = productMapper.toDtoList(products.getContent());
+        return new PageImpl<>(productDtos, products.getPageable(), products.getTotalElements());
 
+    }
     @Override
     public ProductDto getProductBySlug(String slug) {
         Product product = productRepository.findBySlug(slug);
         if (null == product) {
             throw new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND);
         }
-        ProductDto productDto = productMapper.mapProductToDto(product);
+        ProductDto productDto = productMapper.toDto(product);
         productDto.setCategoryId(product.getCategory().getId());
         productDto.setCategoryTypeId(product.getCategoryType().getId());
-        productDto.setVariants(productMapper.mapProductVariantListToDto(product.getProductVariants()));
-        productDto.setProductResources(productMapper.mapProductResourcesListDto(product.getResources()));
+        productDto.setProductVariants(productMapper.toVariantDtoList(product.getProductVariants()));
+        productDto.setResources(productMapper.toResourceDtoList(product.getResources()));
         return productDto;
     }
 
     @Override
     public ProductDto getProductById(UUID id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
-        ProductDto productDto = productMapper.mapProductToDto(product);
+        ProductDto productDto = productMapper.toDto(product);
         productDto.setCategoryId(product.getCategory().getId());
         productDto.setCategoryTypeId(product.getCategoryType().getId());
-        productDto.setVariants(productMapper.mapProductVariantListToDto(product.getProductVariants()));
-        productDto.setProductResources(productMapper.mapProductResourcesListDto(product.getResources()));
+        productDto.setProductVariants(productMapper.toVariantDtoList(product.getProductVariants()));
+        productDto.setResources(productMapper.toResourceDtoList(product.getResources()));
         return productDto;
     }
 
@@ -79,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(ProductDto productDto, UUID id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
         productDto.setId(product.getId());
-        return productRepository.save(productMapper.mapToProductEntity(productDto));
+        return productRepository.save(productMapper.toEntity(productDto));
     }
 
     @Override

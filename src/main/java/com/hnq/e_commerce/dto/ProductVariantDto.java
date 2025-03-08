@@ -12,9 +12,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ProductVariantDto {
-
     private UUID id;
     private String color;
     private String size;
     private Integer stockQuantity;
+    private UUID productId;
 }

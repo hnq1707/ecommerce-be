@@ -3,131 +3,57 @@ package com.hnq.e_commerce.mapper;
 import com.hnq.e_commerce.dto.ProductDto;
 import com.hnq.e_commerce.dto.ProductResourceDto;
 import com.hnq.e_commerce.dto.ProductVariantDto;
-import com.hnq.e_commerce.entities.*;
-import com.hnq.e_commerce.services.CategoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
+import com.hnq.e_commerce.entities.Product;
+import com.hnq.e_commerce.entities.ProductVariant;
+import com.hnq.e_commerce.entities.Resources;
+import com.nimbusds.jose.util.Resource;
+import org.mapstruct.*;
+import org.mapstruct.factory.Mappers;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring")
+public interface ProductMapper {
+    ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
-@Component
-public class ProductMapper {
+    @Mapping(source = "category.id", target = "categoryId")
+    @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "categoryType.id", target = "categoryTypeId")
+    @Mapping(source = "categoryType.name", target = "categoryTypeName")
+    @Mapping(source = "resources", target = "resources") // Đổi productResources thành resources
+    @Mapping(source = "productVariants", target = "productVariants") // Đổi variants thành productVariants
+    ProductDto toDto(Product product);
 
-    @Autowired
-    private CategoryService categoryService;
+    List<ProductDto> toDtoList(List<Product> products);
 
-    public Product mapToProductEntity(ProductDto productDto) {
-        Product product = new Product();
-        if (null != productDto.getId()) {
-            product.setId(productDto.getId());
-        }
-        product.setName(productDto.getName());
-        product.setDescription(productDto.getDescription());
-        product.setBrand(productDto.getBrand());
-        product.setNewArrival(productDto.isNewArrival());
-        product.setPrice(productDto.getPrice());
-        product.setRating(productDto.getRating());
-        product.setSlug(productDto.getSlug());
+    // Chuyển từ ProductDto -> Product
+    @Mapping(source = "categoryId", target = "category.id")
+    @Mapping(source = "categoryName", target = "category.name")
+    @Mapping(source = "categoryTypeId", target = "categoryType.id")
+    @Mapping(source = "categoryTypeName", target = "categoryType.name")
+    @Mapping(source = "resources", target = "resources") // Đảm bảo ánh xạ đúng
+    @Mapping(source = "productVariants", target = "productVariants")
+    Product toEntity(ProductDto productDto);
 
-        Category category = categoryService.getCategory(productDto.getCategoryId());
-        if (null != category) {
-            product.setCategory(category);
-            UUID categoryTypeId = productDto.getCategoryTypeId();
+    List<Product> toProductList(List<ProductDto> productDtos);
 
-            CategoryType categoryType = category.getCategoryTypes().stream().filter(categoryType1 -> categoryType1.getId().equals(categoryTypeId)).findFirst().orElse(null);
-            product.setCategoryType(categoryType);
-        }
+    // Chuyển từ ProductVariant -> ProductVariantDto
+    @Mapping(source = "product.id", target = "productId")
+    ProductVariantDto toVariantDto(ProductVariant variant);
 
-        if (null != productDto.getVariants()) {
-            product.setProductVariants(mapToProductVariant(productDto.getVariants(), product));
-        }
+    List<ProductVariantDto> toVariantDtoList(List<ProductVariant> variants);
 
-        if (null != productDto.getProductResources()) {
-            product.setResources(mapToProductResources(productDto.getProductResources(), product));
-        }
+    // Chuyển từ ProductVariantDto -> ProductVariant
+    @Mapping(source = "productId", target = "product.id")
+    ProductVariant toEntity(ProductVariantDto variantDto);
 
+    List<ProductVariant> toProductVariantList(List<ProductVariantDto> variantDtos);
 
-        return product;
-    }
+    // Kiểm tra lại kiểu dữ liệu của resource nếu cần
+    ProductResourceDto toResourceDto(Resource resource);
 
-    private List<Resources> mapToProductResources(List<ProductResourceDto> productResources, Product product) {
+    List<ProductResourceDto> toResourceDtoList(List<Resources> resources);
 
-        return productResources.stream().map(productResourceDto -> {
-            Resources resources = new Resources();
-            if (null != productResourceDto.getId()) {
-                resources.setId(productResourceDto.getId());
-            }
-            resources.setName(productResourceDto.getName());
-            resources.setType(productResourceDto.getType());
-            resources.setUrl(productResourceDto.getUrl());
-            resources.setIsPrimary(productResourceDto.getIsPrimary());
-            resources.setProduct(product);
-            return resources;
-        }).collect(Collectors.toList());
-    }
+    Resources toEntity(ProductResourceDto resourceDto);
 
-    private List<ProductVariant> mapToProductVariant(List<ProductVariantDto> productVariantDtos, Product product) {
-        return productVariantDtos.stream().map(productVariantDto -> {
-            ProductVariant productVariant = new ProductVariant();
-            if (null != productVariantDto.getId()) {
-                productVariant.setId(productVariantDto.getId());
-            }
-            productVariant.setColor(productVariantDto.getColor());
-            productVariant.setSize(productVariantDto.getSize());
-            productVariant.setStockQuantity(productVariantDto.getStockQuantity());
-            productVariant.setProduct(product);
-            return productVariant;
-        }).collect(Collectors.toList());
-    }
-
-    public List<ProductDto> getProductDtos(List<Product> products) {
-        return products.stream().map(this::mapProductToDto).toList();
-    }
-
-    public ProductDto mapProductToDto(Product product) {
-
-        return ProductDto.builder()
-                .id(product.getId())
-                .brand(product.getBrand())
-                .name(product.getName())
-                .price(product.getPrice())
-                .isNewArrival(product.isNewArrival())
-                .rating(product.getRating())
-                .description(product.getDescription())
-                .slug(product.getSlug())
-                .thumbnail(getProductThumbnail(product.getResources())).build();
-    }
-
-    private String getProductThumbnail(List<Resources> resources) {
-        return resources.stream().filter(Resources::getIsPrimary).findFirst().orElse(null).getUrl();
-    }
-
-    public List<ProductVariantDto> mapProductVariantListToDto(List<ProductVariant> productVariants) {
-        return productVariants.stream().map(this::mapProductVariantDto).toList();
-    }
-
-    private ProductVariantDto mapProductVariantDto(ProductVariant productVariant) {
-        return ProductVariantDto.builder()
-                .color(productVariant.getColor())
-                .id(productVariant.getId())
-                .size(productVariant.getSize())
-                .stockQuantity(productVariant.getStockQuantity())
-                .build();
-    }
-
-    public List<ProductResourceDto> mapProductResourcesListDto(List<Resources> resources) {
-        return resources.stream().map(this::mapResourceToDto).toList();
-    }
-
-    private ProductResourceDto mapResourceToDto(Resources resources) {
-        return ProductResourceDto.builder()
-                .id(resources.getId())
-                .url(resources.getUrl())
-                .name(resources.getName())
-                .isPrimary(resources.getIsPrimary())
-                .type(resources.getType())
-                .build();
-    }
+    List<Resources> toResourceList(List<ProductResourceDto> resourceDtos);
 }
