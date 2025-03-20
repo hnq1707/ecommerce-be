@@ -29,8 +29,9 @@ public class ProductController {
 
     @GetMapping
     public ApiResponse<Page<ProductDto>> getAllProducts(@RequestParam(required = false, name =
-                                                                "categoryId", value = "categoryId") UUID categoryId, @RequestParam(required = false,
-                                                                name = "typeId", value = "typeId") UUID typeId,
+                                                                "categoryId", value = "categoryId") String categoryId, @RequestParam(required = false,
+                                                                name = "typeId",
+                                                                    value = "typeId") String typeId,
                                                         @RequestParam(required = false) String slug, Pageable pageable, HttpServletResponse response)
     {
         if (StringUtils.isNotBlank(slug)) {
@@ -46,7 +47,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ProductDto> getProductById(@PathVariable UUID id) {
+    public ApiResponse<ProductDto> getProductById(@PathVariable String id) {
         ProductDto productDto = productService.getProductById(id);
         return ApiResponse.<ProductDto>builder().result(productDto).build();
     }
@@ -63,7 +64,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Product> updateProduct(@RequestBody ProductDto productDto, @PathVariable UUID id) {
+    public ApiResponse<Product> updateProduct(@RequestBody ProductDto productDto,
+                                              @PathVariable String id) {
         Product product = productService.updateProduct(productDto, id);
         return ApiResponse.<Product>builder()
                 .message("Update successfully")

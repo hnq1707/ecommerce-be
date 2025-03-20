@@ -14,7 +14,7 @@ public class AddressRequest {
     private String name;
     private String street;
     private String city;
-    private String state;
+    private String district;
     private String zipCode;
     private String phoneNumber;
 }

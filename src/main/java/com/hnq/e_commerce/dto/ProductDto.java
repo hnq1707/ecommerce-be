@@ -15,18 +15,18 @@ import java.util.UUID;
 @Builder
 public class ProductDto {
 
-    private UUID id;
+    private String id;
     private String name;
     private String description;
     private BigDecimal price;
     private String brand;
     private boolean isNewArrival;
     private Float rating;
-    private UUID categoryId;
+    private String categoryId;
     private String thumbnail;
     private String slug;
     private String categoryName;
-    private UUID categoryTypeId;
+    private String categoryTypeId;
     private String categoryTypeName;
     private List<ProductVariantDto> productVariants;
     private List<ProductResourceDto> resources;

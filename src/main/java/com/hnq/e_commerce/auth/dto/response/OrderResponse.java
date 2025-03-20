@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 public class OrderResponse {
 
-    private UUID orderId;
+    private String orderId;
     private Map<String, String> credentials;
     private String paymentMethod;
 }

@@ -17,7 +17,7 @@ public class Address {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private String id;
 
     private String name;
 
@@ -28,7 +28,7 @@ public class Address {
     private String city;
 
     @Column(nullable = false)
-    private String state;
+    private String district;
 
     @Column(nullable = false)
     private String zipCode;

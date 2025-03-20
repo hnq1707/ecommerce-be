@@ -53,7 +53,7 @@ public class UserService {
         String code = VerificationCodeGenerator.generateCode();
 
         user.setVerificationCode(code);
-        emailService.sendMail(user);
+        emailService.sendVerificationEmail(user);
 
         try {
             user = userRepository.save(user);
@@ -93,7 +93,7 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse getUser(String id) {
         return userMapper.toUserResponse(
                 userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED)));
@@ -119,10 +119,26 @@ public class UserService {
 
     public void renewVerificationCode(String email) {
         String code = VerificationCodeGenerator.generateCode();
-        User user =
-                userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+
+        String input = email.replaceAll(".*\"email\":\"([^\"]+)\".*", "$1");
+
+       Optional<User> userOptional = userRepository.findByEmail(input);
+       if (userOptional.isEmpty()) {
+           throw new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED);
+       }
+        User user = userOptional.get();
         user.setVerificationCode(code);
-        emailService.sendMail(user);
+        userRepository.save(user);
+        emailService.sendVerificationEmail(user);
+    }
+
+    public List<String> getAllAdminIds() {
+        Role adminRole = roleRepository.findById(PredefinedRole.ADMIN_ROLE)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.ROLE_NOT_FOUND));
+
+        return userRepository.findByRoles(adminRole).stream()
+                .map(User::getId)
+                .toList();
     }
 
 }

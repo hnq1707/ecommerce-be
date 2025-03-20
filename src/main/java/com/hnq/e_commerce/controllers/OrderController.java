@@ -9,6 +9,10 @@ import com.hnq.e_commerce.services.OrderService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,12 +34,13 @@ public class OrderController {
 
     @PostMapping
     public ApiResponse<?> createOrder(@RequestBody OrderRequest orderRequest, Principal principal) throws Exception {
-        OrderResponse orderResponse = orderService.createOrder(orderRequest, principal);
+        OrderResponse orderResponse = orderService.createOrder(orderRequest);
         //return new ResponseEntity<>(order, HttpStatus.CREATED);
 
         return ApiResponse.builder()
                 .code(HttpStatus.CREATED.value())
                 .message(HttpStatus.CREATED.getReasonPhrase())
+                .result(orderResponse)
                 .build();
     }
 
@@ -46,15 +51,24 @@ public class OrderController {
     }
 
     @PostMapping("/cancel/{id}")
-    public ApiResponse<?> cancelOrder(@PathVariable UUID id, Principal principal) {
+    public ApiResponse<?> cancelOrder(@PathVariable String id, Principal principal) {
         orderService.cancelOrder(id, principal);
         return ApiResponse.builder().build();
     }
 
-    @GetMapping("/user")
-    public ApiResponse<List<OrderDetails>> getOrderByUser(Principal principal) {
-        List<OrderDetails> orders = orderService.getOrdersByUser(principal.getName());
-        return ApiResponse.<List<OrderDetails>>builder().result(orders).build();
+    @GetMapping("/{id}")
+    public ApiResponse<OrderDetails> getOrder(@PathVariable String id) {
+        OrderDetails orderDetails = orderService.getOrderDetails(id);
+        return ApiResponse.<OrderDetails>builder().result(orderDetails).build();
     }
+
+    @GetMapping("/users")
+    public ApiResponse<Page<OrderDetails>> getOrdersByUser(
+            Principal principal,
+            @PageableDefault(size = 8, sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.<Page<OrderDetails>>builder().result(orderService.getOrdersByUser(principal,
+                                                                              pageable)).build();
+    }
+
 
 }

@@ -7,11 +7,11 @@ import java.util.UUID;
 
 public class ProductSpecification {
 
-    public static Specification<Product> hasCategoryId(UUID categorId) {
+    public static Specification<Product> hasCategoryId(String categorId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("category").get("id"), categorId);
     }
 
-    public static Specification<Product> hasCategoryTypeId(UUID typeId) {
+    public static Specification<Product> hasCategoryTypeId(String typeId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("categoryType").get("id"), typeId);
     }
 }

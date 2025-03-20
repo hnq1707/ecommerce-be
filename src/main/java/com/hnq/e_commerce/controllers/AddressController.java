@@ -29,12 +29,13 @@ public class AddressController {
         return ApiResponse.<Address>builder()
                 .code(HttpStatus.CREATED.value())
                 .message(HttpStatus.CREATED.getReasonPhrase())
+                .result(address)
                 .build();
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<?> deleteAddress(@PathVariable UUID id) {
-        addressService.deleteAddress(id);
+    public ApiResponse<?> deleteAddress(@PathVariable String id, Principal principal) {
+        addressService.deleteAddress(id, principal);
         return ApiResponse.builder().build();
     }
 }

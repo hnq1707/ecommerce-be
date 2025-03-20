@@ -13,5 +13,6 @@ public class AuthenticationResponse {
     String id;
     String email;
     String accessToken;
+    String refreshToken;
     boolean authenticated;
 }

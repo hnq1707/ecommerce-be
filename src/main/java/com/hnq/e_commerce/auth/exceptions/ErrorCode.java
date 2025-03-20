@@ -18,7 +18,12 @@ public enum ErrorCode {
     USER_DISABLED(1009, "User is disabled", HttpStatus.UNAUTHORIZED),
     USER_PASSWORD_INVALID(1010, "User or password is invalid", HttpStatus.UNAUTHORIZED),
     CATEGORY_NOT_FOUND(1011, "Category not found", HttpStatus.NOT_FOUND),
-    PRODUCT_NOT_FOUND(1012, "Product not found", HttpStatus.NOT_FOUND);
+    PRODUCT_NOT_FOUND(1012, "Product not found", HttpStatus.NOT_FOUND),
+    PRODUCT_EXISTED(1013, "Product existed", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_EXISTED(1014, "Order not existed", HttpStatus.NOT_FOUND),
+    ADDRESS_NOT_FOUND(1015, "Address not found", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND(1016, "Role not found", HttpStatus.NOT_FOUND),
+    ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -14,9 +14,9 @@ import java.util.UUID;
 @Builder
 public class OrderItemDetail {
 
-    private UUID id;
+    private String id;
     private Product product;
-    private UUID productVariantId;
+    private String productVariantId;
     private Integer quantity;
     private Double itemPrice;
 }

@@ -14,11 +14,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class OrderRequest {
-    private UUID userId;
+    private String userId;
     private Date orderDate;
-    private UUID addressId;
+    private String addressId;
     private List<OrderItemRequest> orderItemRequests;
     private Double totalAmount;
+    private Double totalPrice;
     private Double discount;
     private String paymentMethod;
     private Date expectedDeliveryDate;

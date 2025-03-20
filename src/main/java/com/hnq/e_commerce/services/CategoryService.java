@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -27,7 +26,7 @@ public class CategoryService {
 
     CategoryRepository categoryRepository;
 
-    public Category getCategory(UUID id) {
+    public Category getCategory(String id) {
         Optional<Category> category = categoryRepository.findById(id);
         return category.orElse(null);
     }
@@ -74,7 +73,7 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Category updateCategory(CategoryDto categoryDto, UUID categoryId) {
+    public Category updateCategory(CategoryDto categoryDto, String categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -119,9 +118,10 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    public void deleteCategory(UUID categoryId) {
+    public void deleteCategory(String categoryId) {
         categoryRepository.deleteById(categoryId);
     }
+
 
 
 }

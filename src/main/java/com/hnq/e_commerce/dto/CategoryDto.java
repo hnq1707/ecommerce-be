@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 public class CategoryDto {
 
-    private UUID id;
+    private String id;
     private String name;
     private String code;
     private String description;

@@ -17,11 +17,13 @@ import java.util.UUID;
 @Builder
 public class OrderDetails {
 
-    private UUID id;
+    private String id;
     private Date orderDate;
     private Address address;
     private Double totalAmount;
+    private Double totalPrice;
     private OrderStatus orderStatus;
+    private String paymentMethod;
     private String shipmentNumber;
     private Date expectedDeliveryDate;
     private List<OrderItemDetail> orderItemList;

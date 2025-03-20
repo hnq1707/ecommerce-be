@@ -10,13 +10,13 @@ import java.util.UUID;
 public interface ProductService {
     Product addProduct(ProductDto product);
 
-    Page<ProductDto> getAllProducts(UUID categoryId, UUID typeId, Pageable pageable);
+    Page<ProductDto> getAllProducts(String categoryId, String typeId, Pageable pageable);
 
     ProductDto getProductBySlug(String slug);
 
-    ProductDto getProductById(UUID id);
+    ProductDto getProductById(String id);
 
-    Product updateProduct(ProductDto productDto, UUID id);
+    Product updateProduct(ProductDto productDto, String id);
 
-    Product fetchProductById(UUID uuid) throws Exception;
+    Product fetchProductById(String uuid) throws Exception;
 }

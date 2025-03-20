@@ -4,6 +4,7 @@ package com.hnq.e_commerce.controllers;
 import com.hnq.e_commerce.dto.ApiResponse;
 import com.hnq.e_commerce.dto.CategoryDto;
 import com.hnq.e_commerce.entities.Category;
+import com.hnq.e_commerce.entities.CategoryType;
 import com.hnq.e_commerce.services.CategoryService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -26,9 +27,9 @@ public class CategoryController {
     CategoryService categoryService;
 
     @GetMapping("/{id}")
-    public ApiResponse<Category> getCategoryById(@PathVariable(value = "id", required = true) UUID categoryId) {
+    public ApiResponse<Category> getCategoryById(@PathVariable(value = "id", required = true) String categoryId) {
         Category category = categoryService.getCategory(categoryId);
-        return ApiResponse.<Category>builder().build();
+        return ApiResponse.<Category>builder().result(category).build();
 
     }
 
@@ -52,13 +53,14 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Category> updateCategory(@RequestBody CategoryDto categoryDto, @PathVariable(value = "id", required = true) UUID categoryId) {
+    public ApiResponse<Category> updateCategory(@RequestBody CategoryDto categoryDto,
+                                                @PathVariable(value = "id", required = true) String categoryId) {
         Category updatedCategory = categoryService.updateCategory(categoryDto, categoryId);
         return ApiResponse.<Category>builder().result(updatedCategory).build();
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteCategory(@PathVariable(value = "id", required = true) UUID categoryId) {
+    public ApiResponse<Void> deleteCategory(@PathVariable(value = "id", required = true) String categoryId) {
         categoryService.deleteCategory(categoryId);
         return ApiResponse.<Void>builder().build();
     }

@@ -19,7 +19,7 @@ public class ProductVariant {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private String id;
 
     @Column(nullable = false)
     private String color;

@@ -77,8 +77,8 @@ public class AuthController {
     }
 
     @PostMapping("/check-user")
-    ApiResponse<UserResponse> checkUser(@RequestBody OAuthRegistrationRequest request) {
-        return ApiResponse.<UserResponse>builder().result(authenticationService.verifyOrCreateUser(request)).build();
+    ApiResponse<AuthenticationResponse> checkUser(@RequestBody OAuthRegistrationRequest request) {
+        return ApiResponse.<AuthenticationResponse>builder().result(authenticationService.verifyOrCreateUser(request)).build();
     }
 }
 

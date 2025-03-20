@@ -18,7 +18,7 @@ public class Payment {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)

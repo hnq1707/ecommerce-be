@@ -6,11 +6,10 @@ import com.hnq.e_commerce.dto.ProductVariantDto;
 import com.hnq.e_commerce.entities.Product;
 import com.hnq.e_commerce.entities.ProductVariant;
 import com.hnq.e_commerce.entities.Resources;
-import com.nimbusds.jose.util.Resource;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import java.util.List;
-import java.util.UUID;
+
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
     ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
@@ -19,7 +18,7 @@ public interface ProductMapper {
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "categoryType.id", target = "categoryTypeId")
     @Mapping(source = "categoryType.name", target = "categoryTypeName")
-    @Mapping(source = "resources", target = "resources") // Đổi productResources thành resources
+    @Mapping(source = "resources", target = "resources")
     @Mapping(source = "productVariants", target = "productVariants") // Đổi variants thành productVariants
     ProductDto toDto(Product product);
 
@@ -30,8 +29,8 @@ public interface ProductMapper {
     @Mapping(source = "categoryName", target = "category.name")
     @Mapping(source = "categoryTypeId", target = "categoryType.id")
     @Mapping(source = "categoryTypeName", target = "categoryType.name")
-    @Mapping(source = "resources", target = "resources") // Đảm bảo ánh xạ đúng
-    @Mapping(source = "productVariants", target = "productVariants")
+    @Mapping(target = "productVariants", ignore = true) // Gán riêng trong service
+    @Mapping(target = "resources", ignore = true)
     Product toEntity(ProductDto productDto);
 
     List<Product> toProductList(List<ProductDto> productDtos);
@@ -44,15 +43,16 @@ public interface ProductMapper {
 
     // Chuyển từ ProductVariantDto -> ProductVariant
     @Mapping(source = "productId", target = "product.id")
+    @Mapping(target = "product", ignore = true)
     ProductVariant toEntity(ProductVariantDto variantDto);
 
     List<ProductVariant> toProductVariantList(List<ProductVariantDto> variantDtos);
 
     // Kiểm tra lại kiểu dữ liệu của resource nếu cần
-    ProductResourceDto toResourceDto(Resource resource);
+    ProductResourceDto toResourceDto(Resources resource);
 
     List<ProductResourceDto> toResourceDtoList(List<Resources> resources);
-
+    @Mapping(target = "product", ignore = true)
     Resources toEntity(ProductResourceDto resourceDto);
 
     List<Resources> toResourceList(List<ProductResourceDto> resourceDtos);

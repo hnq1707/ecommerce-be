@@ -19,7 +19,7 @@ public class Order {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private String id;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date orderDate;
@@ -37,7 +37,8 @@ public class Order {
 
     @Column(nullable = false)
     private Double totalAmount;
-
+    @Column(nullable = false)
+    private Double totalPrice;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus orderStatus;

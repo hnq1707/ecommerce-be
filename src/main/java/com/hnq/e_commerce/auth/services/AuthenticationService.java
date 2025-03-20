@@ -4,7 +4,6 @@ import com.hnq.e_commerce.auth.constant.PredefinedRole;
 import com.hnq.e_commerce.auth.dto.request.*;
 import com.hnq.e_commerce.auth.dto.response.AuthenticationResponse;
 import com.hnq.e_commerce.auth.dto.response.IntrospectResponse;
-import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.entities.InvalidatedToken;
 import com.hnq.e_commerce.auth.entities.Role;
 import com.hnq.e_commerce.auth.entities.User;
@@ -92,20 +91,16 @@ public class AuthenticationService {
         var token = generateToken(user);
 
         var refreshToken = generateRefreshToken(user);
-        Cookie cookie = new Cookie("refresh_token", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge((int) VALID_DURATION);
-        cookie.setSecure(false);
-        response.addCookie(cookie);
+
         return AuthenticationResponse.builder().id(user.getId()).email(user.getEmail())
-                .accessToken(token).authenticated(true).build();
+                .accessToken(token).refreshToken(refreshToken).authenticated(true).build();
     }
 
-    public UserResponse verifyOrCreateUser(OAuthRegistrationRequest request) {
+    public AuthenticationResponse verifyOrCreateUser(OAuthRegistrationRequest request) {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
-            return userMapper.toUserResponse(existingUser.get());
+            var token = generateToken(existingUser.get());
+            return AuthenticationResponse.builder().id(existingUser.get().getId()).email(existingUser.get().getEmail()).accessToken(token).authenticated(true).build();
         } else {
             User newUser = new User();
             newUser.setEmail(request.getEmail());
@@ -121,7 +116,9 @@ public class AuthenticationService {
             newUser.setRoles(roles);
             try {
                 User nUser = userRepository.save(newUser);
-                return userMapper.toUserResponse(nUser);
+                var token = generateToken(nUser);
+                return AuthenticationResponse.builder().id(nUser.getId()).email(nUser.getEmail())
+                        .accessToken(token).authenticated(true).build();
             } catch (DataIntegrityViolationException exception) {
                 throw new ResourceNotFoundEx(ErrorCode.UNCATEGORIZED_EXCEPTION);
             }
@@ -161,8 +158,8 @@ public class AuthenticationService {
                 userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.UNAUTHENTICATED));
 
         var token = generateToken(user);
-
-        return AuthenticationResponse.builder().accessToken(token).authenticated(true).build();
+        var refreshToken = generateRefreshToken(user);
+        return AuthenticationResponse.builder().accessToken(token).refreshToken(refreshToken).authenticated(true).build();
     }
 
     private String generateToken(User user) {
@@ -196,7 +193,7 @@ public class AuthenticationService {
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
-                .issuer("hnqshop")
+                .issuer("hnq")
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
@@ -212,7 +209,7 @@ public class AuthenticationService {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Cannot create token", e);
+
             throw new RuntimeException(e);
         }
     }

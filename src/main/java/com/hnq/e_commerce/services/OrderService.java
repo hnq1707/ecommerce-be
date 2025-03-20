@@ -2,10 +2,14 @@ package com.hnq.e_commerce.services;
 
 import com.hnq.e_commerce.auth.dto.response.OrderResponse;
 import com.hnq.e_commerce.auth.entities.User;
+import com.hnq.e_commerce.auth.exceptions.ErrorCode;
+import com.hnq.e_commerce.auth.repositories.UserRepository;
+import com.hnq.e_commerce.auth.services.EmailService;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderItemDetail;
 import com.hnq.e_commerce.dto.OrderRequest;
 import com.hnq.e_commerce.entities.*;
+import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.OrderRepository;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
@@ -13,7 +17,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.coyote.BadRequestException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -32,11 +40,16 @@ public class OrderService {
 
 
     PaymentIntentService paymentIntentService;
+   UserRepository userRepository;
+   EmailService emailService;
+//    NotificationService notificationService;
 
 
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest, Principal principal) throws Exception {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public OrderResponse createOrder(OrderRequest orderRequest) throws Exception {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User user = userRepository.findByEmail(name).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
 
         // Kiểm tra và tìm địa chỉ
         Address address = user.getAddressList().stream()
@@ -49,6 +62,7 @@ public class OrderService {
                 .user(user)
                 .address(address)
                 .totalAmount(orderRequest.getTotalAmount())
+                .totalPrice(orderRequest.getTotalPrice())
                 .orderDate(orderRequest.getOrderDate())
                 .discount(orderRequest.getDiscount())
                 .expectedDeliveryDate(orderRequest.getExpectedDeliveryDate())
@@ -65,6 +79,7 @@ public class OrderService {
                                 .product(product)
                                 .productVariantId(orderItemRequest.getProductVariantId())
                                 .quantity(orderItemRequest.getQuantity())
+                                .itemPrice(orderItemRequest.getPrice())
                                 .order(order)
                                 .build();
                     } catch (Exception e) {
@@ -87,6 +102,11 @@ public class OrderService {
 
         // Lưu Order vào cơ sở dữ liệu
         Order savedOrder = orderRepository.save(order);
+        emailService.sendOrderConfirmation(user, order);
+//        notificationService.sendOrderCreatedNotification(savedOrder);
+
+
+
 
         // Tạo OrderResponse
         OrderResponse orderResponse = OrderResponse.builder()
@@ -108,16 +128,19 @@ public class OrderService {
             PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
             if (paymentIntent != null && paymentIntent.getStatus().equals("succeeded")) {
                 String orderId = paymentIntent.getMetadata().get("orderId");
-                Order order = orderRepository.findById(UUID.fromString(orderId)).orElseThrow(BadRequestException::new);
+                Order order = orderRepository.findById(orderId).orElseThrow(BadRequestException::new);
                 Payment payment = order.getPayment();
                 payment.setPaymentStatus(PaymentStatus.COMPLETED);
                 payment.setPaymentMethod(paymentIntent.getPaymentMethod());
                 order.setPaymentMethod(paymentIntent.getPaymentMethod());
                 order.setOrderStatus(OrderStatus.IN_PROGRESS);
+                order.setShipmentTrackingNumber(UUID.randomUUID().toString());
                 order.setPayment(payment);
                 Order savedOrder = orderRepository.save(order);
                 Map<String, String> map = new HashMap<>();
                 map.put("orderId", String.valueOf(savedOrder.getId()));
+//                notificationService.sendOrderStatusUpdateNotification(order, OrderStatus.IN_PROGRESS);
+
                 return map;
             } else {
                 throw new IllegalArgumentException("PaymentIntent not found or missing metadata");
@@ -127,40 +150,101 @@ public class OrderService {
         }
     }
 
-    public List<OrderDetails> getOrdersByUser(String name) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        List<Order> orders = orderRepository.findByUser(user);
-        return orders.stream().map(order -> {
-            return OrderDetails.builder()
-                    .id(order.getId())
-                    .orderDate(order.getOrderDate())
-                    .orderStatus(order.getOrderStatus())
-                    .shipmentNumber(order.getShipmentTrackingNumber())
-                    .address(order.getAddress())
-                    .totalAmount(order.getTotalAmount())
-                    .orderItemList(getItemDetails(order.getOrderItemList()))
-                    .expectedDeliveryDate(order.getExpectedDeliveryDate())
-                    .build();
-        }).toList();
+    public Page<OrderDetails> getOrdersByUser(Principal principal, Pageable pageable) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = jwt.getClaim("sub");
 
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+
+        Page<Order> ordersPage = orderRepository.findByUser(user, pageable);
+
+        return ordersPage.map(order -> OrderDetails.builder()
+                .id(order.getId())
+                .orderDate(order.getOrderDate())
+                .orderStatus(order.getOrderStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .shipmentNumber(order.getShipmentTrackingNumber())
+                .address(order.getAddress())
+                .totalAmount(order.getTotalAmount())
+                .totalPrice(order.getTotalPrice())
+                .orderItemList(getItemDetails(order.getOrderItemList()))
+                .expectedDeliveryDate(order.getExpectedDeliveryDate())
+                .build());
+    }
+
+
+    public OrderDetails getOrderDetails(String orderId) {
+        Order order =
+                orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.ORDER_NOT_EXISTED));
+        return OrderDetails.builder()
+                .id(order.getId())
+                .orderDate(order.getOrderDate())
+                .orderStatus(order.getOrderStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .shipmentNumber(order.getShipmentTrackingNumber())
+                .address(order.getAddress())
+                .totalPrice(order.getTotalPrice())
+                .totalAmount(order.getTotalAmount())
+                .orderItemList(getItemDetails(order.getOrderItemList()))
+                .expectedDeliveryDate(order.getExpectedDeliveryDate())
+                .build();
     }
 
     private List<OrderItemDetail> getItemDetails(List<OrderItem> orderItemList) {
 
-        return orderItemList.stream().map(orderItem -> {
-            return OrderItemDetail.builder()
-                    .id(orderItem.getId())
-                    .itemPrice(orderItem.getItemPrice())
-                    .product(orderItem.getProduct())
-                    .productVariantId(orderItem.getProductVariantId())
-                    .quantity(orderItem.getQuantity())
-                    .build();
-        }).toList();
+        return orderItemList.stream().map(orderItem -> OrderItemDetail.builder()
+                .id(orderItem.getId())
+                .itemPrice(orderItem.getItemPrice())
+                .product(orderItem.getProduct())
+                .productVariantId(orderItem.getProductVariantId())
+                .quantity(orderItem.getQuantity())
+                .build()).toList();
+    }
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public OrderDetails updateOrderStatus(String orderId, OrderStatus newStatus) {
+
+        // Tìm đơn hàng theo ID
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.ORDER_NOT_EXISTED));
+
+        // Cập nhật trạng thái đơn hàng
+        order.setOrderStatus(newStatus);
+
+        // Xử lý trạng thái thanh toán dựa trên trạng thái đơn hàng
+        if (newStatus == OrderStatus.DELIVERED) {
+            order.getPayment().setPaymentStatus(PaymentStatus.COMPLETED);
+        } else if (newStatus == OrderStatus.CANCELLED) {
+            order.getPayment().setPaymentStatus(PaymentStatus.FAILED);
+
+        }
+        // Lưu vào cơ sở dữ liệu
+        Order savedOrder = orderRepository.save(order);
+//        notificationService.sendOrderStatusUpdateNotification(order, newStatus);
+
+
+
+        // Trả về thông tin đơn hàng sau khi cập nhật
+        return OrderDetails.builder()
+                .id(savedOrder.getId())
+                .orderDate(savedOrder.getOrderDate())
+                .orderStatus(savedOrder.getOrderStatus())
+                .paymentMethod(savedOrder.getPaymentMethod())
+                .shipmentNumber(savedOrder.getShipmentTrackingNumber())
+                .address(savedOrder.getAddress())
+                .totalPrice(savedOrder.getTotalPrice())
+                .totalAmount(savedOrder.getTotalAmount())
+                .orderItemList(getItemDetails(savedOrder.getOrderItemList()))
+                .expectedDeliveryDate(savedOrder.getExpectedDeliveryDate())
+                .build();
     }
 
-    public void cancelOrder(UUID id, Principal principal) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Order order = orderRepository.findById(id).get();
+
+    public void cancelOrder(String id, Principal principal) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = jwt.getClaim("sub");
+        User user =
+                userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));        Order order = orderRepository.findById(id).get();
         if (order.getUser().getId().equals(user.getId())) {
             order.setOrderStatus(OrderStatus.CANCELLED);
             //logic to refund amount

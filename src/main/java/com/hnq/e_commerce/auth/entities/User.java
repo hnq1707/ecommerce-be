@@ -50,7 +50,7 @@ public class User {
     @ManyToMany
     Set<Role> roles;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     @ToString.Exclude
     List<Address> addressList;
 
