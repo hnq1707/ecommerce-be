@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -71,5 +70,11 @@ public class ProductController {
                 .message("Update successfully")
                 .result(product)
                 .build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<?> deleteProduct(@PathVariable String id) {
+        productService.deleteProduct(id);
+        return ApiResponse.builder().message("Delete successfully").build();
     }
 }

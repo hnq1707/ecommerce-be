@@ -5,7 +5,6 @@ import com.hnq.e_commerce.auth.entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
 
 @Entity
 @Table(name = "addresses")
@@ -16,7 +15,7 @@ import java.util.UUID;
 public class Address {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String name;

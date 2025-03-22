@@ -11,6 +11,7 @@ import com.hnq.e_commerce.dto.OrderRequest;
 import com.hnq.e_commerce.entities.*;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.OrderRepository;
+import com.hnq.e_commerce.repositories.ProductRepository;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -42,6 +43,8 @@ public class OrderService {
     PaymentIntentService paymentIntentService;
    UserRepository userRepository;
    EmailService emailService;
+      ProductRepository productRepository;
+    private final InvoiceService invoiceService;
 //    NotificationService notificationService;
 
 
@@ -74,10 +77,34 @@ public class OrderService {
         List<OrderItem> orderItems = orderRequest.getOrderItemRequests().stream()
                 .map(orderItemRequest -> {
                     try {
+                        // Bắt buộc phải có productVariantId (client đã đảm bảo không cho đặt hàng nếu không có)
+                        if (orderItemRequest.getProductVariantId() == null || orderItemRequest.getProductVariantId().isEmpty()) {
+                            throw new Exception("Product variant is required for ordering.");
+                        }
+
+                        // Lấy thông tin sản phẩm dựa trên productId
                         Product product = productService.fetchProductById(orderItemRequest.getProductId());
+
+                        // Tìm variant trong danh sách productVariants của Product
+                        ProductVariant variant = product.getProductVariants().stream()
+                                .filter(v -> v.getId().equals(orderItemRequest.getProductVariantId()))
+                                .findFirst()
+                                .orElseThrow(() -> new Exception("Product variant not found with id: " + orderItemRequest.getProductVariantId()));
+
+                        // Kiểm tra tồn kho của variant
+                        if (variant.getStockQuantity() < orderItemRequest.getQuantity()) {
+                            throw new Exception("Insufficient stock for product variant id: " + variant.getId());
+                        }
+
+                        // Cập nhật tồn kho của variant
+                        variant.setStockQuantity(variant.getStockQuantity() - orderItemRequest.getQuantity());
+                        // Lưu lại Product để cập nhật danh sách variant đã thay đổi
+                        productRepository.save(product);
+
+                        // Tạo đối tượng OrderItem
                         return OrderItem.builder()
                                 .product(product)
-                                .productVariantId(orderItemRequest.getProductVariantId())
+                                .productVariantId(variant.getId())
                                 .quantity(orderItemRequest.getQuantity())
                                 .itemPrice(orderItemRequest.getPrice())
                                 .order(order)
@@ -213,6 +240,7 @@ public class OrderService {
 
         // Xử lý trạng thái thanh toán dựa trên trạng thái đơn hàng
         if (newStatus == OrderStatus.DELIVERED) {
+            invoiceService.createInvoiceFromOrder(orderId);
             order.getPayment().setPaymentStatus(PaymentStatus.COMPLETED);
         } else if (newStatus == OrderStatus.CANCELLED) {
             order.getPayment().setPaymentStatus(PaymentStatus.FAILED);
@@ -237,6 +265,26 @@ public class OrderService {
                 .orderItemList(getItemDetails(savedOrder.getOrderItemList()))
                 .expectedDeliveryDate(savedOrder.getExpectedDeliveryDate())
                 .build();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public Page<OrderDetails> getAllOrders(Pageable pageable) {
+        // Lấy danh sách đơn hàng từ repository với phân trang
+        Page<Order> ordersPage = orderRepository.findAll(pageable);
+
+        // Map đối tượng Order sang OrderDetails để trả về thông tin chi tiết
+        return ordersPage.map(order -> OrderDetails.builder()
+                .id(order.getId())
+                .orderDate(order.getOrderDate())
+                .orderStatus(order.getOrderStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .shipmentNumber(order.getShipmentTrackingNumber())
+                .address(order.getAddress())
+                .totalAmount(order.getTotalAmount())
+                .totalPrice(order.getTotalPrice())
+                .orderItemList(getItemDetails(order.getOrderItemList()))
+                .expectedDeliveryDate(order.getExpectedDeliveryDate())
+                .build());
     }
 
 

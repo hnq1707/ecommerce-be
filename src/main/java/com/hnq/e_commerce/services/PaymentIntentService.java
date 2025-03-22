@@ -27,7 +27,7 @@ public class PaymentIntentService {
     public Map<String, String> createPaymentIntent(Order order) throws StripeException {
         User user = order.getUser();
         Map<String, String> metaData = new HashMap<>();
-        metaData.put("orderId", order.getId().toString());
+        metaData.put("orderId", order.getId());
 
         PaymentIntentCreateParams paymentIntentCreateParams = PaymentIntentCreateParams.builder()
                 .setAmount((long) (order.getTotalAmount() * 100)) // Convert từ USD sang cents

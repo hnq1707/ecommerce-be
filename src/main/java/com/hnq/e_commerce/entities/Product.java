@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "product")
@@ -20,7 +19,7 @@ import java.util.UUID;
 public class Product {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false)
@@ -37,7 +36,8 @@ public class Product {
 
     @Column
     private Float rating;
-
+    @Column
+    private String thumbnail;
     @Column(nullable = false)
     private boolean isNewArrival;
 

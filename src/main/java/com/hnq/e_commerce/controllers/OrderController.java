@@ -5,6 +5,7 @@ import com.hnq.e_commerce.auth.dto.response.OrderResponse;
 import com.hnq.e_commerce.dto.ApiResponse;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderRequest;
+import com.hnq.e_commerce.entities.OrderStatus;
 import com.hnq.e_commerce.services.OrderService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/order")
@@ -70,5 +69,13 @@ public class OrderController {
                                                                               pageable)).build();
     }
 
+    @GetMapping
+    public ApiResponse<Page<OrderDetails>> getAllOrders(@PageableDefault(size = 8, direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.<Page<OrderDetails>>builder().result(orderService.getAllOrders(pageable)).build();
+    }
 
+    @PostMapping("/update-status/{id}")
+    public ApiResponse<?> updateOrderStatus(@PathVariable String id, @RequestBody OrderStatus status) {
+        return ApiResponse.builder().result(orderService.updateOrderStatus(id, status)).build();
+    }
 }

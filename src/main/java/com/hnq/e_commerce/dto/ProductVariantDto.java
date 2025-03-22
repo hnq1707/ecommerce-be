@@ -5,16 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ProductVariantDto {
-    private UUID id;
+    private String id;
     private String color;
     private String size;
     private Integer stockQuantity;
-    private UUID productId;
+    private String productId;
 }

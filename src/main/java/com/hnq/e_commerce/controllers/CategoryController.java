@@ -55,8 +55,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ApiResponse<Category> updateCategory(@RequestBody CategoryDto categoryDto,
                                                 @PathVariable(value = "id", required = true) String categoryId) {
-        Category updatedCategory = categoryService.updateCategory(categoryDto, categoryId);
-        return ApiResponse.<Category>builder().result(updatedCategory).build();
+        return ApiResponse.<Category>builder().result(categoryService.updateCategory(categoryDto, categoryId)).build();
     }
 
     @DeleteMapping("/{id}")

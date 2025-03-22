@@ -40,29 +40,41 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Product addProduct(ProductDto productDto) {
         // Kiểm tra sản phẩm đã tồn tại chưa
-        Product pd = productRepository.findBySlug(productDto.getSlug());
-        if (pd != null) {
+        if (productRepository.findBySlug(productDto.getSlug()) != null) {
             throw new ResourceNotFoundEx(ErrorCode.PRODUCT_EXISTED);
         }
 
+        // Nếu id rỗng, tạo UUID mới cho productDto
+        if (productDto.getId() == null || productDto.getId().isBlank()) {
+            productDto.setId(UUID.randomUUID().toString());
+        }
+
+        // Chuyển đổi DTO sang entity và lưu ban đầu để tạo ID
         Product product = productMapper.toEntity(productDto);
+        Product savedProduct = productRepository.save(product);
 
-        final Product product1 = productRepository.save(product);
-
+        // Nếu có productVariants, thiết lập quan hệ với product đã lưu
         if (productDto.getProductVariants() != null) {
             List<ProductVariant> variants = productMapper.toProductVariantList(productDto.getProductVariants())
-                    .stream().peek(variant -> variant.setProduct(product1)).collect(Collectors.toList());
-            product.setProductVariants(variants);
+                    .stream()
+                    .peek(variant -> variant.setProduct(savedProduct))
+                    .collect(Collectors.toList());
+            savedProduct.setProductVariants(variants);
         }
 
+        // Nếu có resources, thiết lập quan hệ với product đã lưu
         if (productDto.getResources() != null) {
             List<Resources> resources = productMapper.toResourceList(productDto.getResources())
-                    .stream().peek(resource -> resource.setProduct(product1)).collect(Collectors.toList());
-            product.setResources(resources);
+                    .stream()
+                    .peek(resource -> resource.setProduct(savedProduct))
+                    .collect(Collectors.toList());
+            savedProduct.setResources(resources);
         }
 
-        return productRepository.save(product1);
+        // Lưu lại product với variants và resources đã được cập nhật
+        return productRepository.save(savedProduct);
     }
+
 
 
     @Override
@@ -102,16 +114,29 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toDto(product);
     }
 
+    @Transactional
     @Override
     public Product updateProduct(ProductDto productDto, String id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
-        productDto.setId(product.getId());
+
         return productRepository.save(productMapper.toEntity(productDto));
     }
 
     @Override
     public Product fetchProductById(String id) throws Exception {
         return productRepository.findById(id).orElseThrow(BadRequestException::new);
+    }
+
+    @Transactional
+    @Override
+    public void deleteProduct(String id) {
+        // Tìm kiếm sản phẩm theo id, nếu không tìm thấy thì ném ngoại lệ
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
+
+        // Xóa sản phẩm (các thực thể liên quan sẽ bị xóa theo cascade)
+        productRepository.delete(product);
+
     }
 
 }

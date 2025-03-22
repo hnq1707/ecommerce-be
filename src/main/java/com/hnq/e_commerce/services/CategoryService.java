@@ -7,10 +7,13 @@ import com.hnq.e_commerce.entities.Category;
 import com.hnq.e_commerce.entities.CategoryType;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.CategoryRepository;
+import com.hnq.e_commerce.repositories.OrderRepository;
+import com.hnq.e_commerce.repositories.ProductRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +28,8 @@ public class CategoryService {
 
 
     CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
     public Category getCategory(String id) {
         Optional<Category> category = categoryRepository.findById(id);
@@ -98,7 +103,8 @@ public class CategoryService {
                             .filter(t -> t.getId()
                                     .equals(categoryTypeDto.getId()))
                             .findFirst();
-                    CategoryType categoryType1 = categoryType.get();
+                    CategoryType categoryType1 = categoryType
+                            .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.CATEGORY_NOT_FOUND));
                     categoryType1.setCode(categoryTypeDto.getCode());
                     categoryType1.setName(categoryTypeDto.getName());
                     categoryType1.setDescription(categoryTypeDto.getDescription());
@@ -117,9 +123,17 @@ public class CategoryService {
 
         return categoryRepository.save(category);
     }
-
+    @Transactional
     public void deleteCategory(String categoryId) {
-        categoryRepository.deleteById(categoryId);
+        // Tìm category cần xóa, nếu không có thì ném ngoại lệ
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.CATEGORY_NOT_FOUND));
+        orderRepository.deleteByCategoryId(categoryId);
+
+        // Xóa các Product phụ thuộc trước
+        productRepository.deleteByCategory(category);
+        // Sau đó xóa Category
+        categoryRepository.delete(category);
     }
 
 
