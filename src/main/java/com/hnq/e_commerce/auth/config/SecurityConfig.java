@@ -29,7 +29,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/register", "/api/auth/token", "/api/auth/verify", "/api/auth/introspect",
             "/api/auth/logout", "/api/auth/refresh", "/upload", "/api/auth/check-user","/api/order",
-            "/api/auth/renew"
+            "/api/auth/renew","/api/notifications/**","/api/notifications/user/**"
     };
 
     @Autowired

@@ -45,7 +45,7 @@ public class OrderService {
    EmailService emailService;
       ProductRepository productRepository;
     private final InvoiceService invoiceService;
-//    NotificationService notificationService;
+    NotificationService notificationService;
 
 
     @Transactional
@@ -130,7 +130,16 @@ public class OrderService {
         // Lưu Order vào cơ sở dữ liệu
         Order savedOrder = orderRepository.save(order);
         emailService.sendOrderConfirmation(user, order);
-//        notificationService.sendOrderCreatedNotification(savedOrder);
+        notificationService.createNotification(
+            order.getUser().getId(),
+            "Đơn hàng mới",
+            "Đơn hàng #" + savedOrder.getId() + " của bạn đã được tạo thành công.",
+            NotificationType.ORDER,
+            "/orders/" + savedOrder.getId(),
+            null,
+            null,
+            null
+        );
 
 
 
@@ -229,6 +238,7 @@ public class OrderService {
                 .build()).toList();
     }
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Transactional
     public OrderDetails updateOrderStatus(String orderId, OrderStatus newStatus) {
 
         // Tìm đơn hàng theo ID
@@ -248,7 +258,35 @@ public class OrderService {
         }
         // Lưu vào cơ sở dữ liệu
         Order savedOrder = orderRepository.save(order);
-//        notificationService.sendOrderStatusUpdateNotification(order, newStatus);
+        String message = "";
+            switch (newStatus) {
+                case IN_PROGRESS:
+                    message = "Đơn hàng #" + order.getId() + " đã được xác nhận.";
+                    break;
+                case SHIPPED:
+                    message = "Đơn hàng #" + order.getId() + " đã được giao cho đơn vị vận chuyển.";
+                    break;
+                case DELIVERED:
+                    message = "Đơn hàng #" + order.getId() + " đã được giao thành công.";
+                    break;
+                case CANCELLED:
+                    message = "Đơn hàng #" + order.getId() + " đã bị hủy.";
+                    break;
+                default:
+                    message =
+                            "Trạng thái đơn hàng #" + order.getId() + " đã được cập nhật thành " + newStatus;
+            }
+
+            notificationService.createNotification(
+                order.getUser().getId(),
+                "Cập nhật đơn hàng",
+                message,
+                NotificationType.ORDER,
+                "/orders/" + orderId,
+                null,
+                null,
+                null
+            );
 
 
 
