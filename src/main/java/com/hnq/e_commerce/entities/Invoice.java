@@ -33,9 +33,10 @@ public class Invoice {
     @Column(nullable = false)
     private Date issuedDate;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "address_id", nullable = false)
     private Address billingAddress;
+
 
     @Column(nullable = false)
     private boolean isPaid;

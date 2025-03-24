@@ -45,5 +45,8 @@ public class InvoiceController {
     }
 
 
-
+    @PostMapping
+    public ApiResponse<Invoice> createInvoice(@RequestParam String orderId) {
+        return ApiResponse.<Invoice>builder().result(invoiceService.createInvoiceFromOrder(orderId)).build();
+    }
 }

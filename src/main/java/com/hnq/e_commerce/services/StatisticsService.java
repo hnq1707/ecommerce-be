@@ -70,7 +70,8 @@ public class StatisticsService {
             Calendar cal = Calendar.getInstance();
             cal.setTime(order.getOrderDate());
             int month = cal.get(Calendar.MONTH) + 1; // Calendar.MONTH là 0-indexed
-            revenueByMonth.put(month, (long) (revenueByMonth.getOrDefault(month, 0L) + order.getTotalAmount()));
+            revenueByMonth.put(month,
+                               (long) (revenueByMonth.getOrDefault(month, 0L) + order.getTotalPrice()));
         }
         List<RevenueDataDTO> revenueData = new ArrayList<>();
         for (int i = 1; i <= 12; i++) {

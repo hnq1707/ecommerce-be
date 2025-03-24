@@ -50,7 +50,7 @@ public class OrderController {
     }
 
     @PostMapping("/cancel/{id}")
-    public ApiResponse<?> cancelOrder(@PathVariable String id, Principal principal) {
+    public ApiResponse<?> cancelOrder(@PathVariable String id, Principal principal) throws Exception {
         orderService.cancelOrder(id, principal);
         return ApiResponse.builder().build();
     }

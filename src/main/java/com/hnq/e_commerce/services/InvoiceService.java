@@ -1,16 +1,20 @@
 package com.hnq.e_commerce.services;
 
+import com.hnq.e_commerce.auth.exceptions.ErrorCode;
 import com.hnq.e_commerce.entities.*;
+import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.InvoiceRepository;
 import com.hnq.e_commerce.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,7 @@ public class InvoiceService {
     }
 
     // Tạo hóa đơn từ đơn hàng
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Invoice createInvoiceFromOrder(String orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -43,7 +48,11 @@ public class InvoiceService {
         if (order.getOrderStatus() != OrderStatus.DELIVERED) {
             throw new RuntimeException("Order is not delivered yet");
         }
+        Optional<Invoice> existingInvoice = invoiceRepository.findByOrder(order);
+        if (existingInvoice.isPresent()) {
 
+            throw new ResourceNotFoundEx(ErrorCode.ORDER_EXISTED);
+        }
         boolean isPaid =
                 order.getPayment() != null && order.getPayment().getPaymentStatus() == PaymentStatus.COMPLETED;
 
@@ -56,7 +65,8 @@ public class InvoiceService {
                 .isPaid(isPaid)
                 .build();
 
-        return invoiceRepository.save(invoice);
+        invoiceRepository.save(invoice);
+        return invoice;
     }
 
     // Tạo hóa đơn cho tất cả đơn hàng DELIVERED chưa có hóa đơn

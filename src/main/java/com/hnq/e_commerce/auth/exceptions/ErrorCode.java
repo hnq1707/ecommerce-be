@@ -23,6 +23,7 @@ public enum ErrorCode {
     ORDER_NOT_EXISTED(1014, "Order not existed", HttpStatus.NOT_FOUND),
     ADDRESS_NOT_FOUND(1015, "Address not found", HttpStatus.NOT_FOUND),
     ROLE_NOT_FOUND(1016, "Role not found", HttpStatus.NOT_FOUND),
+    ORDER_EXISTED(1017, "Order already existed", HttpStatus.CONFLICT),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

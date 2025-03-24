@@ -272,6 +272,7 @@ public class OrderService {
         if (newStatus == OrderStatus.DELIVERED) {
             invoiceService.createInvoiceFromOrder(orderId);
             order.getPayment().setPaymentStatus(PaymentStatus.COMPLETED);
+
         } else if (newStatus == OrderStatus.CANCELLED) {
             order.getPayment().setPaymentStatus(PaymentStatus.FAILED);
 
@@ -353,14 +354,26 @@ public class OrderService {
     }
 
 
-    public void cancelOrder(String id, Principal principal) {
+    public void cancelOrder(String id, Principal principal) throws Exception {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String email = jwt.getClaim("sub");
         User user =
                 userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));        Order order = orderRepository.findById(id).get();
         if (order.getUser().getId().equals(user.getId())) {
             order.setOrderStatus(OrderStatus.CANCELLED);
-            //logic to refund amount
+            for (OrderItem item : order.getOrderItemList()) {
+                // Lấy thông tin sản phẩm dựa trên productId
+                Product product = productService.fetchProductById(item.getId());
+                // Tìm variant trong danh sách productVariants của Product
+                ProductVariant variant = product.getProductVariants().stream()
+                        .filter(v -> v.getId().equals(item.getProductVariantId()))
+                        .findFirst()
+                        .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
+
+                // Cập nhật tồn kho của variant
+                variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
+                productRepository.save(product);
+            }
             orderRepository.save(order);
         } else {
             throw new RuntimeException("Invalid request");
