@@ -55,6 +55,7 @@ public class UserService {
         user.setVerificationCode(code);
         emailService.sendVerificationEmail(user);
 
+
         try {
             user = userRepository.save(user);
         } catch (DataIntegrityViolationException exception) {

@@ -141,7 +141,13 @@ public class OrderService {
             null
         );
 
-
+        notificationService.notifyNewOrder(
+                savedOrder.getId(),
+                savedOrder.getId(),
+                savedOrder.getUser().getId(),
+                savedOrder.getUser().getEmail(),
+                savedOrder.getTotalAmount()
+        );
 
 
         // Tạo OrderResponse
@@ -175,7 +181,21 @@ public class OrderService {
                 Order savedOrder = orderRepository.save(order);
                 Map<String, String> map = new HashMap<>();
                 map.put("orderId", String.valueOf(savedOrder.getId()));
-//                notificationService.sendOrderStatusUpdateNotification(order, OrderStatus.IN_PROGRESS);
+
+                notificationService.createNotification(
+                        payment.getOrder().getUser().getId(),
+                        "Thanh toán thành công",
+                        "Thanh toán cho đơn hàng #" + payment.getOrder().getId() + " đã được xử lý " +
+                                "thành " +
+                                "công với số tiền "
+                                + payment.getAmount(),
+                        NotificationType.PAYMENT,
+                        "/payments/" + payment.getId(),
+                        null,
+                        null,
+                        null
+                );
+
 
                 return map;
             } else {
@@ -271,6 +291,13 @@ public class OrderService {
                     break;
                 case CANCELLED:
                     message = "Đơn hàng #" + order.getId() + " đã bị hủy.";
+                    notificationService.notifyCancelledOrder(
+                            order.getId(),
+                            order.getId(),
+                            order.getUser().getId(),
+                            order.getUser().getEmail(),
+                            null
+                    );
                     break;
                 default:
                     message =

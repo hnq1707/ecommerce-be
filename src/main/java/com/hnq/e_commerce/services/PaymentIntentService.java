@@ -30,7 +30,7 @@ public class PaymentIntentService {
         metaData.put("orderId", order.getId());
 
         PaymentIntentCreateParams paymentIntentCreateParams = PaymentIntentCreateParams.builder()
-                .setAmount((long) (order.getTotalAmount() * 100)) // Convert từ USD sang cents
+                .setAmount((long) (order.getTotalPrice() * 100)) // Convert từ USD sang cents
                 .setCurrency("usd")
                 .putAllMetadata(metaData)
                 .setDescription("Test Payment Project -1")

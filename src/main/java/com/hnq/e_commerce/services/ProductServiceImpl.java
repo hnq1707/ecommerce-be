@@ -15,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -88,7 +85,12 @@ public class ProductServiceImpl implements ProductService {
             productSpecification = productSpecification.and(ProductSpecification.hasCategoryTypeId(typeId));
         }
 
-        Pageable customPageable = PageRequest.of(pageable.getPageNumber(), 8, pageable.getSort());
+        Pageable customPageable;
+        if (pageable.isUnpaged()) {
+            customPageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.unsorted()); // Lấy toàn bộ sản phẩm
+        } else {
+            customPageable = PageRequest.of(pageable.getPageNumber(), 8, pageable.getSort());
+        }
         Page<Product> products = productRepository.findAll(productSpecification, customPageable);
         List<ProductDto> productDtos = productMapper.toDtoList(products.getContent());
         return new PageImpl<>(productDtos, products.getPageable(), products.getTotalElements());
