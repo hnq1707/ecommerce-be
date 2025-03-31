@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class OrderService {
 
 
@@ -110,6 +112,8 @@ public class OrderService {
                                 .order(order)
                                 .build();
                     } catch (Exception e) {
+                        log.error("Error processing order item. Product ID: {}, Variant ID: {}, Error: {}",
+                                  orderItemRequest.getProductId(), orderItemRequest.getProductVariantId(), e.getMessage(), e);
                         throw new RuntimeException("Failed to fetch product or create order item", e);
                     }
                 })
