@@ -25,15 +25,7 @@ public class StatisticsService {
     private final CategoryService categoryService;
     private final ProductService productService;
 
-    /**
-     * Tổng hợp các số liệu thống kê chính:
-     * - Tổng doanh thu (sum của totalAmount của tất cả đơn hàng)
-     * - Số đơn hàng
-     * - Số khách hàng (lấy từ UserService)
-     * - Giá trị trung bình của đơn hàng
-     * <p>
-     * Các chỉ số tăng trưởng được giả định là 0 (cần logic cụ thể dựa vào dữ liệu lịch sử).
-     */
+
     public DashboardStatsDTO getDashboardStats() {
         Page<OrderDetails> ordersPage = orderService.getAllOrders(Pageable.unpaged());
         List<OrderDetails> orders = ordersPage.getContent();
@@ -80,9 +72,7 @@ public class StatisticsService {
         return revenueData;
     }
 
-    /**
-     * Nhóm đơn hàng theo tháng (T1 - T12) để tính số lượng đơn hàng mỗi tháng.
-     */
+
     public List<OrderDataDTO> getOrderData() {
         Page<OrderDetails> ordersPage = orderService.getAllOrders(Pageable.unpaged());
         List<OrderDetails> orders = ordersPage.getContent();
@@ -100,9 +90,7 @@ public class StatisticsService {
         return orderData;
     }
 
-    /**
-     * Lấy dữ liệu thống kê theo danh mục: tên danh mục và số lượng sản phẩm thuộc danh mục đó.
-     */
+
     public List<CategoryDataDTO> getCategoryData() {
         List<Category> categories = categoryService.getAllCategory();
         List<CategoryDataDTO> categoryData = new ArrayList<>();

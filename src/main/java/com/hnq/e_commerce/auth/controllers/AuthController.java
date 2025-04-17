@@ -80,5 +80,16 @@ public class AuthController {
     ApiResponse<AuthenticationResponse> checkUser(@RequestBody OAuthRegistrationRequest request) {
         return ApiResponse.<AuthenticationResponse>builder().result(authenticationService.verifyOrCreateUser(request)).build();
     }
+    @PostMapping("/forget-password")
+    ApiResponse<Void> forgetPassword(@RequestBody ForgetPasswordRequest request) {
+        authenticationService.forgetPassword(request);
+        return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/reset-password")
+    ApiResponse<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authenticationService.resetPassword(request);
+        return ApiResponse.<Void>builder().message("Reset password successfully").build();
+    }
 }
 

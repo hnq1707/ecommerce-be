@@ -108,4 +108,14 @@ public class EmailService {
             e.getMessage();
         }
     }
+
+    public void sendPassword(User user, String password) {
+        String subject = "Your Password from HNQ Shop";
+        String senderName = "HNQ Shop";
+        String mailContent = "Hello " + user.getEmail() + ",\n";
+        mailContent += "Your password is: " + password + "\n";
+        mailContent += senderName;
+
+        sendEmail(user.getEmail(), subject, mailContent);
+    }
 }

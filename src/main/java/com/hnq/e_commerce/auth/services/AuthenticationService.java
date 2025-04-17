@@ -18,7 +18,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -50,6 +49,7 @@ public class AuthenticationService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
+    private final EmailService emailService;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -252,6 +252,41 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
+    private static String generateRandomString(int length) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(characters.length());
+            sb.append(characters.charAt(index));
+        }
+
+        return sb.toString();
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new ResourceNotFoundEx(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedOn(new Date());
+        userRepository.save(user);
+    }
+
+    public void forgetPassword(ForgetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+        String password = generateRandomString(8);
+        user.setPassword(passwordEncoder.encode(password));
+        emailService.sendPassword(user, password);
+        user.setUpdatedOn(new Date());
+        userRepository.save(user);
+    }
     @EventListener(ContextRefreshedEvent.class)
 //    @Scheduled(cron = "0 0 0 * * ?")  //gọi method vào 0h mỗi ngày
     @Transactional
