@@ -13,6 +13,7 @@ import com.hnq.e_commerce.auth.repositories.RoleRepository;
 import com.hnq.e_commerce.auth.repositories.UserRepository;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.mapper.UserMapper;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -88,7 +90,7 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<UserResponse> getUsers() {
         log.info("In method get Users");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
@@ -99,24 +101,23 @@ public class UserService {
         return userMapper.toUserResponse(
                 userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED)));
     }
-
-    public void verifyCode(VerifyRequest request) {
+    @Transactional
+    public void verifyCode(@NotNull VerifyRequest request) {
         String email = request.getEmail();
         String code = request.getCode();
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent()) {
-            if (userOptional.get().getVerificationCode().equals(code)) {
-                User user = userOptional.get();
-                user.setEnabled(true);
-                user.setUpdatedOn(new Date());
-                userRepository.save(user);
-            } else {
-                throw new ResourceNotFoundEx(ErrorCode.INVALID_KEY);
-            }
-        } else {
-            throw new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+
+        if (!user.getVerificationCode().equals(code)) {
+            throw new ResourceNotFoundEx(ErrorCode.INVALID_KEY);
         }
+
+        user.setEnabled(true);
+        user.setUpdatedOn(new Date());
+        userRepository.save(user);
     }
+
 
     public void renewVerificationCode(String email) {
         String code = VerificationCodeGenerator.generateCode();

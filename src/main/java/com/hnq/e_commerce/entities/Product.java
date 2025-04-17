@@ -1,11 +1,13 @@
 package com.hnq.e_commerce.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hnq.e_commerce.config.ProductEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.context.event.EventListener;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(ProductEntityListener.class)
 public class Product {
 
     @Id
