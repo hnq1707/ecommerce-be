@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -356,32 +357,80 @@ public class OrderService {
                 .expectedDeliveryDate(order.getExpectedDeliveryDate())
                 .build());
     }
+    @Transactional
+    public void cancelOrder(String orderId, Principal principal) throws Exception {
+        // Lấy thông tin người dùng hiện tại
+        String email = principal.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
 
+        // Tìm đơn hàng theo ID
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.ORDER_NOT_EXISTED));
 
-    public void cancelOrder(String id, Principal principal) throws Exception {
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = jwt.getClaim("sub");
-        User user =
-                userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));        Order order = orderRepository.findById(id).get();
-        if (order.getUser().getId().equals(user.getId())) {
-            order.setOrderStatus(OrderStatus.CANCELLED);
-            for (OrderItem item : order.getOrderItemList()) {
-                // Lấy thông tin sản phẩm dựa trên productId
-                Product product = productService.fetchProductById(item.getId());
-                // Tìm variant trong danh sách productVariants của Product
-                ProductVariant variant = product.getProductVariants().stream()
-                        .filter(v -> v.getId().equals(item.getProductVariantId()))
-                        .findFirst()
-                        .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.PRODUCT_NOT_FOUND));
+        // Kiểm tra xem người dùng hiện tại có phải chủ sở hữu của đơn hàng không
 
-                // Cập nhật tồn kho của variant
-                variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
-                productRepository.save(product);
-            }
-            orderRepository.save(order);
-        } else {
-            throw new RuntimeException("Invalid request");
+        boolean isOrderOwner = order.getUser().getId().equals(user.getId());
+        boolean isAdminOrManager = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (!isOrderOwner && !isAdminOrManager) {
+            throw new AccessDeniedException("Bạn không có quyền hủy đơn hàng này");
         }
 
+        // Kiểm tra trạng thái đơn hàng hiện tại
+        // Chỉ cho phép hủy đơn hàng ở trạng thái PENDING hoặc IN_PROGRESS
+        if (order.getOrderStatus() == OrderStatus.DELIVERED ||
+                order.getOrderStatus() == OrderStatus.SHIPPED ||
+                order.getOrderStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Không thể hủy đơn hàng ở trạng thái " + order.getOrderStatus());
+        }
+
+        // Hoàn trả số lượng sản phẩm vào kho
+        for (OrderItem orderItem : order.getOrderItemList()) {
+            // Lấy thông tin sản phẩm
+            Product product = orderItem.getProduct();
+
+            // Tìm variant trong danh sách productVariants của Product
+            ProductVariant variant = product.getProductVariants().stream()
+                    .filter(v -> v.getId().equals(orderItem.getProductVariantId()))
+                    .findFirst()
+                    .orElseThrow(() -> new Exception("Product variant not found with id: " + orderItem.getProductVariantId()));
+
+            // Hoàn trả số lượng sản phẩm
+            variant.setStockQuantity(variant.getStockQuantity() + orderItem.getQuantity());
+
+            // Lưu lại Product để cập nhật danh sách variant đã thay đổi
+            productRepository.save(product);
+        }
+
+        // Cập nhật trạng thái đơn hàng và thanh toán
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        order.getPayment().setPaymentStatus(PaymentStatus.FAILED);
+
+        // Lưu đơn hàng đã cập nhật
+        orderRepository.save(order);
+
+        // Gửi thông báo cho người dùng
+        notificationService.createNotification(
+                order.getUser().getId(),
+                "Đơn hàng đã hủy",
+                "Đơn hàng #" + order.getId() + " đã được hủy thành công.",
+                NotificationType.ORDER,
+                "/orders/" + order.getId(),
+                null,
+                null,
+                null
+        );
+
+        // Thông báo cho admin/manager
+        notificationService.notifyCancelledOrder(
+                order.getId(),
+                order.getId(),
+                order.getUser().getId(),
+                order.getUser().getEmail(),
+                null
+        );
     }
 }
