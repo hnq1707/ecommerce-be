@@ -5,7 +5,7 @@ import com.hnq.e_commerce.auth.dto.request.UserCreationRequest;
 import com.hnq.e_commerce.auth.dto.request.UserUpdateRequest;
 import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.services.UserService;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -52,9 +52,9 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/{userId}")
+    @PostMapping("/disabled/{userId}")
     ApiResponse<String> deleteUser(@PathVariable String userId) {
-        userService.deleteUser(userId);
+        userService.disableUser(userId);
         return ApiResponse.<String>builder().result("User has been deleted").build();
     }
 

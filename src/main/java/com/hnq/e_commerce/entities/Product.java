@@ -71,6 +71,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Resources> resources;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Review> reviews;
+
     @PrePersist
     protected void onCreate() {
         createdAt = new java.util.Date();

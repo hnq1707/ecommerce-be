@@ -28,10 +28,14 @@ import java.util.List;
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/register", "/api/auth/token", "/api/auth/verify", "/api/auth/introspect",
-            "/api/auth/logout", "/api/auth/refresh", "/upload", "/api/auth/check-user","/api/order",
+            "/api/auth/logout", "/api/auth/refresh","/api/auth/forget-password", "/upload", "/api" +
+            "/auth" +
+            "/check-user","/api" +
+            "/order",
             "/api/auth/renew","/api/notifications/**","/api/notifications/user/**","/api/admin/notifications/**"
-            ,"/api/statistic/**","/api/products/search/**"
+            ,"/api/statistic/**","/api/products/search/**", "/api/reviews/product/**"
     };
+
 
     @Autowired
     @Lazy
@@ -45,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/api/category/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                 .decoder(customJwtDecoder)

@@ -86,8 +86,13 @@ public class UserService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteUser(String userId) {
-        userRepository.deleteById(userId);
+    public void disableUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
+
+        user.setEnabled(false);
+        userRepository.save(user);
+        log.info("Tài khoản người dùng {} đã bị vô hiệu hóa", user.getEmail());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")

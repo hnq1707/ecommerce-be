@@ -1,9 +1,9 @@
 package com.hnq.e_commerce.controllers;
 
-import com.hnq.e_commerce.dto.ApiResponse;
-import com.hnq.e_commerce.dto.CouponValidationRequest;
-import com.hnq.e_commerce.dto.DiscountRequest;
-import com.hnq.e_commerce.dto.DiscountResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
+import com.hnq.e_commerce.dto.request.CouponValidationRequest;
+import com.hnq.e_commerce.dto.request.DiscountRequest;
+import com.hnq.e_commerce.dto.response.DiscountResponse;
 import com.hnq.e_commerce.entities.Coupon;
 import com.hnq.e_commerce.services.CouponService;
 import jakarta.validation.Valid;

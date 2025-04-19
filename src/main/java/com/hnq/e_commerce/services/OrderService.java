@@ -7,7 +7,7 @@ import com.hnq.e_commerce.auth.repositories.UserRepository;
 import com.hnq.e_commerce.auth.services.EmailService;
 import com.hnq.e_commerce.dto.OrderDetails;
 import com.hnq.e_commerce.dto.OrderItemDetail;
-import com.hnq.e_commerce.dto.OrderRequest;
+import com.hnq.e_commerce.dto.request.OrderRequest;
 import com.hnq.e_commerce.entities.*;
 import com.hnq.e_commerce.exception.ResourceNotFoundEx;
 import com.hnq.e_commerce.repositories.OrderRepository;

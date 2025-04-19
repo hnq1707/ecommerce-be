@@ -1,7 +1,7 @@
 package com.hnq.e_commerce.auth.exceptions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

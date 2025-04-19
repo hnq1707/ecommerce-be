@@ -25,7 +25,9 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(1016, "Role not found", HttpStatus.NOT_FOUND),
     ORDER_EXISTED(1017, "Order already existed", HttpStatus.CONFLICT),
     COUPON_NOT_EXISTED(1018, "Coupon not existed", HttpStatus.CONFLICT),
-    PASSWORD_NOT_MATCH(1019,"Password not match" ,HttpStatus.BAD_REQUEST ),;
+    PASSWORD_NOT_MATCH(1019,"Password not match" ,HttpStatus.BAD_REQUEST ),
+    USER_ROLES_NOT_FOUND(1020, "User roles not found", HttpStatus.NOT_FOUND),
+    VALIDATION_ERROR(1021,"Cannot remove the last role from a user" , HttpStatus.BAD_REQUEST),;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

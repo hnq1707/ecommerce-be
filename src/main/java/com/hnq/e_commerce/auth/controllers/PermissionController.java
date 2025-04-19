@@ -3,7 +3,7 @@ package com.hnq.e_commerce.auth.controllers;
 import com.hnq.e_commerce.auth.dto.request.PermissionRequest;
 import com.hnq.e_commerce.auth.dto.response.PermissionResponse;
 import com.hnq.e_commerce.auth.services.PermissionService;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

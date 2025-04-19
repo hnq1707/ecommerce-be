@@ -1,8 +1,9 @@
 package com.hnq.e_commerce.controllers;
 
-import com.hnq.e_commerce.dto.ProductSearchResponseDTO;
+import com.hnq.e_commerce.dto.response.ProductSearchResponseDTO;
 import com.hnq.e_commerce.entities.elasticsearch.ProductDocument;
 import com.hnq.e_commerce.services.ProductSearchService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

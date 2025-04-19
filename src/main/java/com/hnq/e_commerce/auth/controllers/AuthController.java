@@ -6,7 +6,7 @@ import com.hnq.e_commerce.auth.dto.response.IntrospectResponse;
 import com.hnq.e_commerce.auth.dto.response.UserResponse;
 import com.hnq.e_commerce.auth.services.AuthenticationService;
 import com.hnq.e_commerce.auth.services.UserService;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

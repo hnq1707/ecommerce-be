@@ -1,6 +1,6 @@
 package com.hnq.e_commerce.controllers;
 
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import com.hnq.e_commerce.dto.ProductDto;
 import com.hnq.e_commerce.entities.Product;
 import com.hnq.e_commerce.services.ProductService;

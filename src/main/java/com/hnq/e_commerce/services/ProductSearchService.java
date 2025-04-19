@@ -3,7 +3,6 @@ package com.hnq.e_commerce.services;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import com.hnq.e_commerce.dto.AutocompleteResponse;
 import com.hnq.e_commerce.entities.Product;
 import com.hnq.e_commerce.entities.elasticsearch.ProductDocument;
 
@@ -14,10 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor

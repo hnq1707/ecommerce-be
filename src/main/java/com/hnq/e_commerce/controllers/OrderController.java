@@ -2,9 +2,9 @@ package com.hnq.e_commerce.controllers;
 
 
 import com.hnq.e_commerce.auth.dto.response.OrderResponse;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import com.hnq.e_commerce.dto.OrderDetails;
-import com.hnq.e_commerce.dto.OrderRequest;
+import com.hnq.e_commerce.dto.request.OrderRequest;
 import com.hnq.e_commerce.entities.OrderStatus;
 import com.hnq.e_commerce.services.OrderService;
 import lombok.AccessLevel;

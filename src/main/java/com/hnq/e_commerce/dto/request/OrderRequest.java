@@ -1,4 +1,4 @@
-package com.hnq.e_commerce.dto;
+package com.hnq.e_commerce.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor

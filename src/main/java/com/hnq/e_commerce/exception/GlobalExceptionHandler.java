@@ -1,7 +1,7 @@
 package com.hnq.e_commerce.exception;
 
 import com.hnq.e_commerce.auth.exceptions.ErrorCode;
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

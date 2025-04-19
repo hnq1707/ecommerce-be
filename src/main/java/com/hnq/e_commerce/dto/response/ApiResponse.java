@@ -1,4 +1,4 @@
-package com.hnq.e_commerce.dto;
+package com.hnq.e_commerce.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

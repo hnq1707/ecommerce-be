@@ -1,10 +1,9 @@
 package com.hnq.e_commerce.controllers;
 
 
-import com.hnq.e_commerce.dto.ApiResponse;
+import com.hnq.e_commerce.dto.response.ApiResponse;
 import com.hnq.e_commerce.dto.CategoryDto;
 import com.hnq.e_commerce.entities.Category;
-import com.hnq.e_commerce.entities.CategoryType;
 import com.hnq.e_commerce.services.CategoryService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -14,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 
 @RestController
