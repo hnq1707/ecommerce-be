@@ -52,11 +52,12 @@ public class UserController {
     }
 
 
-    @PostMapping("/disabled/{userId}")
-    ApiResponse<String> deleteUser(@PathVariable String userId) {
-        userService.disableUser(userId);
-        return ApiResponse.<String>builder().result("User has been deleted").build();
+    @PutMapping("/toggle-status/{userId}")
+    ApiResponse<String> toggleUserStatus(@PathVariable String userId) {
+        userService.toggleUserStatus(userId);
+        return ApiResponse.<String>builder().result("Trạng thái người dùng đã được thay đổi").build();
     }
+
 
     @PutMapping("/{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {

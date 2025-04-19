@@ -86,13 +86,19 @@ public class UserService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void disableUser(String userId) {
+    public void toggleUserStatus(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.USER_NOT_EXISTED));
 
-        user.setEnabled(false);
+        // Đảo ngược trạng thái hiện tại
+        user.setEnabled(!user.isEnabled());
         userRepository.save(user);
-        log.info("Tài khoản người dùng {} đã bị vô hiệu hóa", user.getEmail());
+
+        if (user.isEnabled()) {
+            log.info("Tài khoản người dùng {} đã được kích hoạt", user.getEmail());
+        } else {
+            log.info("Tài khoản người dùng {} đã bị vô hiệu hóa", user.getEmail());
+        }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")

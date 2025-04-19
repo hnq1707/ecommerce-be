@@ -23,6 +23,7 @@ public class UserResponse {
     private String imageUrl;
     private String phoneNumber;
     private String email;
+    private boolean enabled;
     private Set<Role> roles;
     private List<Address> addressList;
 }
