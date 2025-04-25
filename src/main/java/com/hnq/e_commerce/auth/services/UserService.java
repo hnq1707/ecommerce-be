@@ -101,7 +101,7 @@ public class UserService {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'STAFF')")
     public List<UserResponse> getUsers() {
         log.info("In method get Users");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
@@ -145,13 +145,5 @@ public class UserService {
         emailService.sendVerificationEmail(user);
     }
 
-    public List<String> getAllAdminIds() {
-        Role adminRole = roleRepository.findById(PredefinedRole.ADMIN_ROLE)
-                .orElseThrow(() -> new ResourceNotFoundEx(ErrorCode.ROLE_NOT_FOUND));
-
-        return userRepository.findByRoles(adminRole).stream()
-                .map(User::getId)
-                .toList();
-    }
 
 }

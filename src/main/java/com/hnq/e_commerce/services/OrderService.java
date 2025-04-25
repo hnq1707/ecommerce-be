@@ -338,7 +338,7 @@ public class OrderService {
                 .build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public Page<OrderDetails> getAllOrders(Pageable pageable) {
         // Lấy danh sách đơn hàng từ repository với phân trang
         Page<Order> ordersPage = orderRepository.findAll(pageable);
